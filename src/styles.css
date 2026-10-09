@@ -41,13 +41,11 @@
 .story-column{min-height:0}
 #story,.chapter-nav{flex-shrink:0}
 
-/* Reserve a separate, visible area beneath the phone for the interaction cue. */
+/* Keep the phone raised; the invitation is glowing type, not a button. */
 .demo-stage{padding:36px 0 88px}
-.stage-bottom{left:50%;right:auto;bottom:14px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);min-height:54px;padding:11px 16px;gap:12px;background:var(--orange);border:1px solid #ff925f;color:var(--green);font-size:8px;line-height:1.6;letter-spacing:.065em;z-index:3;box-shadow:5px 5px 0 #03291d;animation:cue-arrive .65s .3s both}
-.stage-bottom strong{display:inline-block;color:var(--green);font-size:11px;font-weight:bold;letter-spacing:.025em}
-.stage-bottom .touch-indicator{width:29px;height:29px;border-color:#06402b50;transform:none;flex-shrink:0}
-.stage-bottom .touch-indicator .icon{width:18px;height:18px}
-.stage-bottom .curved-arrow{color:var(--green);font-size:29px;margin:0 0 0 5px;transform:rotate(-15deg)}
-@keyframes cue-arrive{from{opacity:0;translate:0 7px}to{opacity:1;translate:0 0}}
-@media(max-width:760px) and (orientation:portrait){.demo-stage{padding:25px 0 74px}.stage-bottom{bottom:9px;min-height:49px;padding:9px 12px;gap:9px;font-size:7px}.stage-bottom strong{font-size:9px}.stage-bottom .touch-indicator{width:25px;height:25px}.stage-bottom .curved-arrow{font-size:25px}}
-@media(max-height:560px) and (orientation:landscape){.demo-stage{padding:24px 0 65px}.stage-bottom{bottom:9px;min-height:43px;padding:7px 11px;font-size:6px;gap:8px}.stage-bottom strong{font-size:8px}.stage-bottom .touch-indicator{width:23px;height:23px}.stage-bottom .curved-arrow{font-size:23px}}
+.stage-bottom{left:50%;right:auto;bottom:27px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);min-height:0;padding:0;gap:0;background:none;border:0;box-shadow:none;color:var(--orange);text-align:center;font-size:9px;line-height:1.8;letter-spacing:.09em;z-index:3;text-shadow:0 0 8px #ff6b3560,0 0 20px #ff6b3530;animation:cue-arrive .65s .3s both}
+.stage-bottom strong{display:inline-block;color:var(--orange);font-size:10px;font-weight:400;letter-spacing:.06em;text-shadow:0 0 7px #ff6b3580,0 0 18px #ff6b3545}
+.stage-bottom .touch-indicator,.stage-bottom .curved-arrow{display:none}
+@keyframes cue-arrive{from{opacity:0;translate:0 5px}to{opacity:1;translate:0 0}}
+@media(max-width:760px) and (orientation:portrait){.demo-stage{padding:25px 0 74px}.stage-bottom{bottom:22px;font-size:8px}.stage-bottom strong{font-size:9px}}
+@media(max-height:560px) and (orientation:landscape){.demo-stage{padding:24px 0 65px}.stage-bottom{bottom:19px;font-size:7px}.stage-bottom strong{font-size:8px}}
