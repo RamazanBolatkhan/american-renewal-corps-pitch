@@ -49,3 +49,23 @@
 @keyframes cue-arrive{from{opacity:0;translate:0 5px}to{opacity:1;translate:0 0}}
 @media(max-width:760px) and (orientation:portrait){.demo-stage{padding:25px 0 74px}.stage-bottom{bottom:22px;font-size:8px}.stage-bottom strong{font-size:9px}}
 @media(max-height:560px) and (orientation:landscape){.demo-stage{padding:24px 0 65px}.stage-bottom{bottom:19px;font-size:7px}.stage-bottom strong{font-size:8px}}
+
+/* The contact flow is an explicitly labeled, presentation-only demo. */
+.contact-trigger{color:var(--orange);border-color:#ff6b3570}
+.contact-dialog{margin:auto;width:min(560px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #93a591;border-top:5px solid var(--orange);padding:36px;background:var(--paper);color:var(--green);box-shadow:16px 16px 0 #001d1560}
+.contact-dialog::backdrop{background:#001c14c9;backdrop-filter:blur(7px)}
+.contact-dialog[open]{animation:contact-arrive .3s ease-out}
+.contact-close{position:absolute;right:14px;top:12px;border:0;background:transparent;color:var(--green);font-size:28px;width:36px;height:36px;line-height:1}
+.contact-eyebrow{display:block;font-size:9px;letter-spacing:.15em;margin-bottom:20px;padding-right:20px}
+.contact-dialog h2{font-size:54px;line-height:.95;letter-spacing:-.015em}.contact-dialog h2 span{color:#c4481b}
+.contact-intro{font-size:13px;line-height:1.7;margin:18px 0 24px;max-width:410px;color:#536b5b}
+.contact-fields{display:grid;grid-template-columns:1fr 1fr;gap:18px 14px}
+.contact-fields label{display:grid;gap:8px;font-size:9px;letter-spacing:.06em}.contact-fields label>span{display:contents;color:#647464}
+.contact-fields input,.contact-fields select{width:100%;min-width:0;border:1px solid #bac7b7;border-radius:0;background:#fffef780;padding:12px 10px;font:13px DM,Arial,sans-serif;color:var(--green);height:44px}
+.contact-fields input:focus-visible,.contact-fields select:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.contact-demo-note{font-size:10px;line-height:1.6;color:#526c5a;margin:22px 0 14px;border-top:1px solid #bcc8b7;padding-top:14px}
+.contact-submit{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:var(--green);color:var(--paper);padding:14px 17px;font-size:11px;letter-spacing:.06em;min-height:48px}.contact-submit span{color:var(--orange);font-size:25px}.contact-submit:hover{background:#0c543b}
+.contact-success-mark{display:block;color:#c4481b;font-size:56px;margin:12px 0}.contact-success h3{font-size:32px}.contact-success p{font-size:13px;line-height:1.7;margin:14px 0 24px}
+.contact-form[hidden],.contact-success[hidden]{display:none}
+@keyframes contact-arrive{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:480px){.contact-dialog{padding:26px 22px}.contact-dialog h2{font-size:44px}.contact-fields{grid-template-columns:1fr;gap:13px}.contact-intro{font-size:12px;margin:15px 0 18px}.contact-eyebrow{font-size:8px}.contact-demo-note{margin-top:18px}}

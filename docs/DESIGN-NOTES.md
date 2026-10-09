@@ -39,3 +39,9 @@ The user supplied the concept of daily skilled-trades retraining for data infras
 
 ## Deployment and future work
 The repository is connected to Vercel. This redesign is developed on feature/interactive-mobile-demo for review. A real mobile app, accounts, persistent learner progress, validated curriculum, and enrollment are separate product work. Keep noindex until an approved production release.
+
+### Demo contact popup
+- Header “Get in touch” opens the cream/green/orange native dialog.
+- Automatically opens once per page load after all five screens have been visited and the visitor remains on Progress for 1.8 seconds. Moving away cancels the pending popup.
+- User requested a presentation-only form: no backend, network submission, or persistence. Fields are cleared on close/submission and the confirmation explicitly explains demo behavior.
+- Verified automatic/manual opening, submission confirmation, Escape dismissal, reopening, desktop and 390×844 mobile layout. `npm run build` passed.
