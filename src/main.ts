@@ -1,4 +1,8 @@
 import './styles.css';
+import { inject } from '@vercel/analytics';
+
+inject();
+
 
 const arrow = '<span aria-hidden="true">↗</span>';
 const bolt = `<svg viewBox="0 0 160 200" fill="none" aria-hidden="true"><path d="M90 8 23 113h51l-6 79 70-112H89z" fill="currentColor"/><path d="m83 23-50 81h52l-8 61 44-74H79z" stroke="var(--paper)" stroke-width="1"/></svg>`;
