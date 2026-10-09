@@ -198,7 +198,9 @@ app.addEventListener('click', event=> {
 document.querySelector('.brand')!.addEventListener('click', event=> {event.preventDefault();navigate('home');});
 function resizePhone() {
  const stage=document.querySelector<HTMLElement>('.demo-stage')!;
- const scale=Math.min(1.1,Math.max(.25,(stage.clientHeight-96)/636),Math.max(.25,(stage.clientWidth-52)/320));
+ const layout = getComputedStyle(stage);
+ const availableHeight = stage.clientHeight - parseFloat(layout.paddingTop) - parseFloat(layout.paddingBottom) - 8;
+ const scale=Math.min(1.1,Math.max(.25,availableHeight/636),Math.max(.25,(stage.clientWidth-52)/320));
  stage.style.setProperty('--phone-scale',String(scale));
 }
 renderStory();renderPhone();
