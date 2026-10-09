@@ -49,7 +49,7 @@ app.innerHTML = `
 <a class="skip-link" href="#demo">Skip to interactive demo</a>
 <div class="site-shell">
 <header class="site-header"><a class="brand" href="#home" aria-label="American Renewal Corps home"><span class="wordmark">arc<span>✳</span></span><span class="brand-name">AMERICAN<br>RENEWAL CORPS</span></a><span class="header-note"><i></i> A NEW GENERATION OF BUILDERS.</span><button class="outline-button" data-screen="trades">EXPLORE THE APP ${icon('arrow')}</button></header>
-<main class="experience"><section class="story-column" aria-label="About this app"><div id="story" aria-live="polite" aria-atomic="true"></div><nav class="chapter-nav" aria-label="Explore the app concept">${screens.map((s,i)=>`<button data-screen="${s.id}" aria-current="${i===0?'page':'false'}"><span class="chapter-number">0${i+1}</span><span class="chapter-name">${s.label}</span><span class="chapter-dot"></span></button>`).join('')}</nav></section>
+<main class="experience"><section class="story-column" aria-label="About this app"><div id="story" aria-live="polite" aria-atomic="true"></div><nav class="chapter-nav" aria-label="Explore the app concept">${screens.map((s,i)=>`<button data-screen="${s.id}" aria-current="${i===0?'page':'false'}"><span class="chapter-number">0${i+1}</span><span class="chapter-name">${s.label}</span></button>`).join('')}</nav></section>
 <section class="demo-stage" id="demo" aria-label="Interactive mobile app demonstration" tabindex="-1"><div class="stage-top"><span><i></i> INTERACTIVE APP CONCEPT</span><span class="stage-edition">ARC / 001</span><button class="mobile-focus" id="focus-app" aria-expanded="false">ENLARGE APP ↗</button></div><div class="stage-orbit orbit-a"></div><div class="stage-orbit orbit-b"></div><span class="stage-cross cross-a">+</span><span class="stage-cross cross-b">+</span><div class="margin-note">BUILT AROUND HUMAN POTENTIAL.</div><div class="phone-wrap"><div class="phone"><div class="phone-edge edge-one"></div><div class="phone-edge edge-two"></div><div class="phone-screen"><div class="phone-status"><span>9:41</span><span class="island"></span><span class="status-icons">▮▮▮ <svg viewBox="0 0 20 12" aria-hidden="true"><rect x="1" y="2" width="15" height="8" rx="2"/><path d="M18 4v4"/><rect x="3" y="4" width="11" height="4" fill="currentColor" stroke="none"/></svg></span></div><div class="phone-app-header"><span class="app-logo">arc<span>✳</span></span><span class="demo-badge">TRY IT OUT</span><div class="xp-pill" id="xp-count" aria-label="Experience points">${icon('bolt')}<span>0 XP</span></div></div><div id="phone-content" class="phone-content"></div><nav class="phone-nav" aria-label="Mobile app screens">${screens.map(s=>`<button data-screen="${s.id}" aria-label="${s.short}" aria-current="${s.id==='home'?'page':'false'}">${icon(s.icon)}<span>${s.short}</span></button>`).join('')}</nav><div class="home-indicator"></div></div></div></div><div class="stage-bottom"><span class="touch-indicator">${icon('compass')}</span><span>THIS ISN’T A SCREENSHOT.<br><strong>GO AHEAD. TAP SOMETHING.</strong></span><span class="curved-arrow">↗</span></div></section></main>
 <footer class="site-footer"><span>REAL SKILLS. REAL PURPOSE. A NEW DIRECTION.</span><span class="footer-concept">INDEPENDENT CONCEPT · SAMPLE LEARNING ONLY</span><button id="reset-demo">RESET DEMO <span>↺</span></button></footer>
 </div><div class="sr-only" id="announcement" role="status" aria-live="polite"></div>`;
@@ -87,12 +87,83 @@ function renderPhone(focusTarget?: string) {
  document.querySelectorAll<HTMLButtonElement>('[data-screen]').forEach(button=> { if(button.closest('nav')) button.setAttribute('aria-current',String(button.dataset.screen===screen?'page':'false')); });
  if(focusTarget) phoneContent.querySelector<HTMLElement>(focusTarget)?.focus({preventScroll:true});
 }
+const chapterNav = document.querySelector<HTMLElement>('.chapter-nav')!;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let chapterAnimations: Animation[] = [];
+let chapterEffects: HTMLElement[] = [];
+let chapterTransition = 0;
+
+function clearChapterAnimation() {
+ chapterTransition++;
+ chapterAnimations.forEach(animation => animation.cancel());
+ chapterEffects.forEach(element => element.remove());
+ chapterAnimations = [];
+ chapterEffects = [];
+}
+
+function animateChapter(previous: Screen, next: Screen) {
+ clearChapterAnimation();
+ if (reducedMotion.matches || !chapterNav.getClientRects().length) return;
+ const from = chapterNav.querySelector<HTMLElement>(`[data-screen="${previous}"] .chapter-number`)!;
+ const to = chapterNav.querySelector<HTMLElement>(`[data-screen="${next}"] .chapter-number`)!;
+ const bounds = chapterNav.getBoundingClientRect();
+ const start = from.getBoundingClientRect();
+ const end = to.getBoundingClientRect();
+ const x1 = start.left + start.width / 2 - bounds.left;
+ const x2 = end.left + end.width / 2 - bounds.left;
+ const y1 = start.top + start.height / 2 - bounds.top;
+ const y2 = end.top + end.height / 2 - bounds.top;
+ const distance = Math.abs(x2 - x1);
+ const direction = Math.sign(x2 - x1);
+ if (distance < 1) return;
+ const transition = chapterTransition;
+ const streak = document.createElement('span');
+ streak.className = 'chapter-streak';
+ streak.setAttribute('aria-hidden', 'true');
+ streak.style.width = `${distance}px`;
+ chapterNav.append(streak);
+ chapterEffects.push(streak);
+ const travel = streak.animate([
+  { transform: `translate(${x1}px, ${y1}px) scaleX(0)`, opacity: 0 },
+  { transform: `translate(${x1}px, ${y1}px) scaleX(${direction * .12})`, opacity: 1, offset: .12 },
+  { transform: `translate(${x1}px, ${y2}px) scaleX(${direction})`, opacity: 1, offset: .6 },
+  { transform: `translate(${x2}px, ${y2}px) scaleX(0)`, opacity: 0 },
+ ], { duration: 420, easing: 'cubic-bezier(.4,0,.2,1)' });
+ chapterAnimations.push(travel);
+ travel.finished.then(() => {
+  if (transition !== chapterTransition) return;
+  streak.remove();
+  const burst = document.createElement('span');
+  burst.className = 'chapter-burst';
+  burst.setAttribute('aria-hidden', 'true');
+  burst.style.left = `${x2 - 11}px`;
+  burst.style.top = `${y2 - 11}px`;
+  chapterNav.append(burst);
+  chapterEffects.push(burst);
+  const pop = to.animate([
+   { transform: 'scale(1)', textShadow: '0 0 0 transparent' },
+   { transform: 'scale(1.55)', textShadow: '0 0 18px #f3cf55aa', offset: .32 },
+   { transform: 'scale(.95)', textShadow: '0 0 7px #f3cf5540', offset: .7 },
+   { transform: 'scale(1)', textShadow: '0 0 0 transparent' },
+  ], { duration: 460, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  const ring = burst.animate([
+   { transform: 'scale(.45)', opacity: .9 },
+   { transform: 'scale(2.4)', opacity: 0 },
+  ], { duration: 460, easing: 'ease-out' });
+  chapterAnimations.push(pop, ring);
+  ring.finished.then(() => burst.remove()).catch(() => {});
+ }).catch(() => {});
+}
+window.addEventListener('resize', clearChapterAnimation);
+reducedMotion.addEventListener('change', clearChapterAnimation);
+
 function navigate(next: Screen) {
  if(!screens.some(s=>s.id===next)) return;
  const previous=screen; screen=next;
  if(next==='learn' && previous!=='learn' && completedLessons.has(trade) && lessonIndex===2) lessonIndex=0;
  if(previous!==next) renderStory();
  renderPhone();
+ if(previous!==next) animateChapter(previous, next);
  document.querySelector('#announcement')!.textContent = `${screens.find(s=>s.id===next)!.short} screen. ${next==='learn'?trades[trade].lesson:''}`;
 }
 function announce(text: string) { document.querySelector('#announcement')!.textContent=text; }
