@@ -1,4 +1,5 @@
 import './styles.css';
+import { mountPhoneIntro } from './phone-intro';
 import { mountContactDemo } from './contact';
 import { inject } from '@vercel/analytics';
 import { screens, stories, trades, type Screen, type Trade } from './demo-data';
@@ -210,3 +211,5 @@ function resizePhone() {
 renderStory();renderPhone();
 new ResizeObserver(resizePhone).observe(document.querySelector('.demo-stage')!);
 resizePhone();
+
+mountPhoneIntro();

@@ -45,3 +45,9 @@ The repository is connected to Vercel. This redesign is developed on feature/int
 - Automatically opens once per page load after all five screens have been visited and the visitor remains on Progress for 1.8 seconds. Moving away cancels the pending popup.
 - User requested a presentation-only form: no backend, network submission, or persistence. Fields are cleared on close/submission and the confirmation explicitly explains demo behavior.
 - Verified automatic/manual opening, submission confirmation, Escape dismissal, reopening, desktop and 390×844 mobile layout. `npm run build` passed.
+
+### Worker-to-phone introduction
+- Original inline SVG of a worker in a hard hat holding an orange outlined phone; cream technical lines preserve the existing palette.
+- 2.4-second opening draws the illustration, zooms the illustrated phone to the measured live phone bounds, and fades into the interactive app.
+- Pointer or keyboard interaction or a reduced-motion preference cancels the intro immediately. Actual viewport changes recalculate an active animation; no-change resize events during navigation are ignored. Reduced-motion users get the app directly. The intro starts after fonts and layout settle on every page load or refresh. “Replay intro” also repeats it for presentation.
+- Verified desktop and 390×844 mobile, completed animation cleanup, and immediate navigation while skipping the animation. No new dependencies or external assets.
