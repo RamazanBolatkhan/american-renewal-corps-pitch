@@ -13,7 +13,8 @@ Preserved visual language: #06402B green, #F3F2E9 cream, #FF6B35 orange, Barlow 
 - Progress: actual demo-session lesson/practice milestones and total XP across trades.
 - Once-per-trade rewards: 30 XP for the lesson and 60 XP for practice. Repeats cannot inflate the total.
 - Reset Demo clears sample progress. Refresh also resets it; no account or server storage is implied.
-- Navigation updates the left-side story with staggered headline reveals and a sliding information card. Reduced-motion users see immediate transitions.
+- Navigation updates the left-side story with staggered headline reveals and a sliding information card. A traveling orange (#FF6B35) spark and number burst mark chapter changes; no static dash remains. Reduced-motion users see immediate transitions.
+- Story panels share CSS subgrid rows sized for the longest content. Headings, descriptions, cards, and chapter navigation keep identical positions across all five screens, including mobile. Inactive panels remain hidden and inert.
 - Mobile: compact story above the phone; optional Enlarge App/Show the Story mode.
 
 ## Content boundaries
@@ -34,6 +35,7 @@ The user supplied the concept of daily skilled-trades retraining for data infras
 - Desktop, 1280x720 laptop, 390x844 mobile, 320x568 small phone, and 844x390 landscape document dimensions matched viewport dimensions without page scrolling.
 - Mobile enlargement and return-to-story controls verified.
 - Browser warnings/errors absent during interaction checks.
+- Fixed-position regression check: all five chapters have identical heading, description, card, and navigation offsets. Laptop and mobile navigation/phone positions remain identical across switches. Desktop navigation stays above the footer, with zero shell scroll.
 
 ## Deployment and future work
 The repository is connected to Vercel. This redesign is developed on feature/interactive-mobile-demo for review. A real mobile app, accounts, persistent learner progress, validated curriculum, and enrollment are separate product work. Keep noindex until an approved production release.

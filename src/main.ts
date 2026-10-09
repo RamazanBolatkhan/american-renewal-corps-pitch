@@ -57,8 +57,19 @@ app.innerHTML = `
 const phoneContent = document.querySelector<HTMLDivElement>('#phone-content')!;
 const story = document.querySelector<HTMLDivElement>('#story')!;
 function renderStory() {
- const content = stories[screen];
- story.innerHTML = `<div class="story-eyebrow"><span class="tiny-square"></span>${content.eyebrow}</div><h1>${content.title.map((line,index)=>`<span class="headline-line"><span style="--line:${index}" class="${index===content.accent?'accent-line':''}">${line}</span></span>`).join('')}</h1><p class="story-description">${content.description}</p><div class="story-feature"><span class="feature-icon">${icon(screen==='home'?'star':screens.find(s=>s.id===screen)!.icon)}</span><div><h2>${content.feature}</h2><p>${content.detail}</p></div><span class="feature-corner">↗</span></div><div class="story-note">${content.note}<span>↗</span></div>`;
+ // Shared grid rows reserve space for the longest copy before any screen changes.
+ if (!story.children.length) {
+  story.innerHTML = screens.map(({ id, icon: screenIcon }) => {
+   const content = stories[id];
+   return `<div class="story-panel" data-story="${id}" aria-hidden="true" inert><div class="story-eyebrow"><span class="tiny-square"></span>${content.eyebrow}</div><h1>${content.title.map((line,index)=>`<span class="headline-line"><span style="--line:${index}" class="${index===content.accent?'accent-line':''}">${line}</span></span>`).join('')}</h1><p class="story-description">${content.description}</p><div class="story-feature"><span class="feature-icon">${icon(id==='home'?'star':screenIcon)}</span><div><h2>${content.feature}</h2><p>${content.detail}</p></div><span class="feature-corner">↗</span></div><div class="story-note">${content.note}<span>↗</span></div></div>`;
+  }).join('');
+ }
+ story.querySelectorAll<HTMLElement>('.story-panel').forEach(panel => {
+  const active = panel.dataset.story === screen;
+  panel.classList.toggle('is-active', active);
+  panel.setAttribute('aria-hidden', String(!active));
+  panel.inert = !active;
+ });
 }
 function homeView() {
  const current = trades[trade];
@@ -142,8 +153,8 @@ function animateChapter(previous: Screen, next: Screen) {
   chapterEffects.push(burst);
   const pop = to.animate([
    { transform: 'scale(1)', textShadow: '0 0 0 transparent' },
-   { transform: 'scale(1.55)', textShadow: '0 0 18px #f3cf55aa', offset: .32 },
-   { transform: 'scale(.95)', textShadow: '0 0 7px #f3cf5540', offset: .7 },
+   { transform: 'scale(1.55)', textShadow: '0 0 18px #ff6b35aa', offset: .32 },
+   { transform: 'scale(.95)', textShadow: '0 0 7px #ff6b3540', offset: .7 },
    { transform: 'scale(1)', textShadow: '0 0 0 transparent' },
   ], { duration: 460, easing: 'cubic-bezier(.2,.8,.2,1)' });
   const ring = burst.animate([
