@@ -11,7 +11,8 @@ Independent interview pitch project; not the organization's official production 
 - Generated `dist/` and `node_modules/` are ignored.
 
 ## Files
-- `src/main.ts`: page markup, inline SVG illustrations, trade tabs, mobile navigation.
+- `src/main.ts`: interactive app shell, SVG illustrations, screen rendering, demo state, and analytics.
+- `src/demo-data.ts`: story copy, three trades, lesson cards, and practice questions.
 - `src/styles.css`: all layout, typography, colors, and responsive styling.
 - `public/`: locally hosted images and fonts, font licenses, favicon.
 - `docs/DESIGN-NOTES.md`: design direction, asset sources, and prior verification.
@@ -20,9 +21,11 @@ Independent interview pitch project; not the organization's official production 
 ## Design and content
 - Preserve primary green #06402B with cream #F3F2E9 and orange #FF6B35 unless asked to change them.
 - Preserve the bold condensed type, editorial grid, technical illustrations, and framed cards.
+- The current design is a single-screen, no-page-scroll experience: animated story on the left and a clickable phone prototype on the right. Keep phone navigation and story content synchronized.
+- Demo XP is earned once per lesson/practice per trade and resets on refresh; do not imply real learner accounts or certifications.
 - Focus on retraining for skilled trades serving data infrastructure, electrification, building systems, and industry.
 - Training pathways are proposed concepts. Do not invent partnerships, credentials, tuition, start dates, statistics, testimonials, or placement guarantees.
-- Keep responsive behavior, accessible tab keyboard navigation, focus states, FAQ disclosures, and reduced-motion support.
+- Keep responsive behavior, keyboard-operable controls, focus states, mobile enlargement, and reduced-motion support.
 - Keep noindex while this remains an interview concept. Deployment or official-site replacement is a separate task.
 
 ## Working agreement

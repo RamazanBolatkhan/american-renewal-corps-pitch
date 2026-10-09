@@ -1,25 +1,39 @@
-# Landing page design
+# Interactive mobile-app landing page
 
-## Direction
-Reference-inspired editorial layout: oversized condensed type, grid backgrounds, technical line drawings, numbered phase cards, contrasting sections, and framed content. Primary green: #06402B. Cream: #F3F2E9. Orange accent: #FF6B35.
+## Current direction
+The user requested a single-screen landing page, with no document scrolling: an interactive phone on the right and explanatory text on the left that animates when visitors change app screens. This replaces the initial long-form landing page, which remains in Git history.
 
-## Content
-Based on the user's skilled-trades retraining direction. Electrical, building systems, and industrial pathways are proposed concepts, not verified current offerings. No fabricated partner relationships, performance statistics, testimonials, credentials, tuition, or placement promises. External contact links lead to the existing organization website.
+Preserved visual language: #06402B green, #F3F2E9 cream, #FF6B35 orange, Barlow Condensed headings, DM Sans copy, technical line drawings, grid backgrounds, and numbered navigation.
+
+## Interaction model
+- Home: daily lesson card, selected trade, and current session progress.
+- Trades: electrical, building systems, and industrial, each with distinct educational content.
+- Learn: three illustrated concept cards with back/next navigation.
+- Practice: three questions, answer validation, explanations, retry, and completion.
+- Progress: actual demo-session lesson/practice milestones and total XP across trades.
+- Once-per-trade rewards: 30 XP for the lesson and 60 XP for practice. Repeats cannot inflate the total.
+- Reset Demo clears sample progress. Refresh also resets it; no account or server storage is implied.
+- Navigation updates the left-side story with staggered headline reveals and a sliding information card. Reduced-motion users see immediate transitions.
+- Mobile: compact story above the phone; optional Enlarge App/Show the Story mode.
+
+## Content boundaries
+The user supplied the concept of daily skilled-trades retraining for data infrastructure, construction, and industry. Paths, app screens, and learning mechanics are proposed. No invented customers, partnerships, certifications, tuition, dates, testimonials, or job-placement claims. All lesson content is conceptual, not operational instruction for working on equipment.
 
 ## Assets
-- Barlow Condensed 800 and DM Sans 400: Google Fonts, locally hosted in public/fonts; SIL Open Font License.
-- Construction photograph: https://images.unsplash.com/photo-1504307651254-35680f356dfd (Unsplash), local copy in public/images/construction.jpg. Illustrative stock image, not a claim about ARC staff or facilities.
-- Technical helmet, circuit, and lightning illustrations: inline SVG created for this concept.
-- Wordmark and favicon are concept branding.
+- Barlow Condensed 800 and DM Sans 400: locally hosted Google Fonts, SIL Open Font License files included.
+- Technical illustrations and interface icons: inline SVG created for the demo.
+- Original stock construction photo retained in public/images but not loaded by this design.
+- Concept wordmark and favicon, not verified company branding.
 
 ## Verification
-- TypeScript check and Vite production build passed.
-- Desktop and 390px mobile layouts visually inspected in Chrome.
-- Mobile viewport and document width both 390px; no horizontal page overflow.
-- Trade tabs update content on click and with arrow-key navigation.
-- FAQ disclosure opens and renders its answer.
-- Mobile menu opens, follows a section link, and closes.
-- Construction image loaded successfully; no browser warnings or errors observed.
+- TypeScript checking and Vite production build.
+- Chrome: full electrical lesson and quiz, including incorrect-answer retry, correct-answer explanations, and 90 XP completion.
+- Both building-systems and industrial lessons/quizzes completed; accumulated 180 XP across those trades in a fresh session.
+- Replaying a completed quiz left XP unchanged. Reset returned it to zero.
+- Every default screen and every tested building-systems/industrial lesson and answer state fit the 461px phone content viewport without internal scrolling.
+- Desktop, 1280x720 laptop, 390x844 mobile, 320x568 small phone, and 844x390 landscape document dimensions matched viewport dimensions without page scrolling.
+- Mobile enlargement and return-to-story controls verified.
+- Browser warnings/errors absent during interaction checks.
 
-## Launch work
-Confirm program copy and branding with the organization, replace contact links with the approved intake destination if needed, and remove noindex only for an authorized production release. The current delivery remains local.
+## Deployment and future work
+The repository is connected to Vercel. This redesign is developed on feature/interactive-mobile-demo for review. A real mobile app, accounts, persistent learner progress, validated curriculum, and enrollment are separate product work. Keep noindex until an approved production release.
