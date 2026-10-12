@@ -8,7 +8,7 @@ Independent interview pitch project; not the organization's official production 
 - Install reproducibly: `npm ci`.
 - Validate and produce the production build: `npm run build` (includes TypeScript checking). `npm run check` runs TypeScript alone.
 - Local development: `npm run dev`. Production preview: `npm run preview` (build, then `next start`).
-- Generated `.next/` and `node_modules/` are ignored. `vercel.json` sets the Vercel framework to Next.js.
+- Generated `.next/` and `node_modules/` are ignored. `vercel.json` sets the Vercel framework, build command and output folder to Next.js values, overriding the project's original Vite settings.
 
 ## Files
 - `src/landing/`: the original framework-free landing experience (`main.ts`, `demo-data.ts`, `phone-intro.ts`, `contact.ts`, `styles.css`), mounted once on `/` by `LandingMount.tsx`. Link to and from `/` with plain `<a>` (full page load), not `next/link`.
