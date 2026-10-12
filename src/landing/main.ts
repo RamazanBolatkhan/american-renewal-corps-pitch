@@ -1,10 +1,8 @@
 import './styles.css';
 import { mountPhoneIntro } from './phone-intro';
 import { mountContactDemo } from './contact';
-import { inject } from '@vercel/analytics';
 import { screens, stories, trades, type Screen, type Trade } from './demo-data';
 
-inject();
 
 const iconPaths: Record<string, string> = {
   home: '<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
@@ -50,7 +48,7 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
 <a class="skip-link" href="#demo">Skip to interactive demo</a>
 <div class="site-shell">
-<header class="site-header"><a class="brand" href="#home" aria-label="American Renewal Corps home"><span class="wordmark">arc<span>✳</span></span><span class="brand-name">AMERICAN<br>RENEWAL CORPS</span></a><span class="header-note"><i></i> A NEW GENERATION OF BUILDERS.</span><button class="outline-button contact-trigger" id="open-contact">GET IN TOUCH ${icon('arrow')}</button></header>
+<header class="site-header"><a class="brand" href="#home" aria-label="American Renewal Corps home"><span class="wordmark">arc<span>✳</span></span><span class="brand-name">AMERICAN<br>RENEWAL CORPS</span></a><span class="header-note"><i></i> A NEW GENERATION OF BUILDERS.</span><span class="header-actions"><a class="outline-button start-trigger" href="/start">START LEARNING ${icon('arrow')}</a><button class="outline-button contact-trigger" id="open-contact">GET IN TOUCH ${icon('arrow')}</button></span></header>
 <main class="experience"><section class="story-column" aria-label="About this app"><div id="story" aria-live="polite" aria-atomic="true"></div><nav class="chapter-nav" aria-label="Explore the app concept">${screens.map((s,i)=>`<button data-screen="${s.id}" aria-current="${i===0?'page':'false'}"><span class="chapter-number">0${i+1}</span><span class="chapter-name">${s.label}</span></button>`).join('')}</nav></section>
 <section class="demo-stage" id="demo" aria-label="Interactive mobile app demonstration" tabindex="-1"><div class="stage-top"><span><i></i> INTERACTIVE APP CONCEPT</span><span class="stage-edition">ARC / 001</span><button class="mobile-focus" id="focus-app" aria-expanded="false">ENLARGE APP ↗</button></div><div class="stage-orbit orbit-a"></div><div class="stage-orbit orbit-b"></div><span class="stage-cross cross-a">+</span><span class="stage-cross cross-b">+</span><div class="margin-note">BUILT AROUND HUMAN POTENTIAL.</div><div class="phone-wrap"><div class="phone"><div class="phone-edge edge-one"></div><div class="phone-edge edge-two"></div><div class="phone-screen"><div class="phone-status"><span>9:41</span><span class="island"></span><span class="status-icons">▮▮▮ <svg viewBox="0 0 20 12" aria-hidden="true"><rect x="1" y="2" width="15" height="8" rx="2"/><path d="M18 4v4"/><rect x="3" y="4" width="11" height="4" fill="currentColor" stroke="none"/></svg></span></div><div class="phone-app-header"><span class="app-logo">arc<span>✳</span></span><span class="demo-badge">TRY IT OUT</span><div class="xp-pill" id="xp-count" aria-label="Experience points">${icon('bolt')}<span>0 XP</span></div></div><div id="phone-content" class="phone-content"></div><nav class="phone-nav" aria-label="Mobile app screens">${screens.map(s=>`<button data-screen="${s.id}" aria-label="${s.short}" aria-current="${s.id==='home'?'page':'false'}">${icon(s.icon)}<span>${s.short}</span></button>`).join('')}</nav><div class="home-indicator"></div></div></div></div><div class="stage-bottom"><span class="touch-indicator">${icon('compass')}</span><span>THIS ISN’T A SCREENSHOT.<br><strong>GO AHEAD. TAP SOMETHING.</strong></span><span class="curved-arrow">↗</span></div></section></main>
 <footer class="site-footer"><span>REAL SKILLS. REAL PURPOSE. A NEW DIRECTION.</span><span class="footer-concept">INDEPENDENT CONCEPT · SAMPLE LEARNING ONLY</span><button id="reset-demo">RESET DEMO <span>↺</span></button></footer>

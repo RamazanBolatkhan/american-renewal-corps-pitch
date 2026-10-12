@@ -10,16 +10,26 @@ npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite (normally http://127.0.0.1:5173).
+Open the URL printed by Next.js (normally http://127.0.0.1:3000).
 
 ## Verify and build
 
 ```sh
-npm run build
-npm run preview
+npm run build     # TypeScript check + production build
+npm run preview   # build, then serve the production build
 ```
 
-The build includes TypeScript checking and produces static files in `dist/`.
+## Pages
+
+| Route | What it is |
+|---|---|
+| `/` | The interactive landing page (unchanged experience) with a new **Start learning** button |
+| `/start` | Choose: try the demo, create an account, or log in |
+| `/register`, `/login` | Account forms (skeleton: nothing is sent or saved yet) |
+| `/learn/style` | Choose a learning style: Read, Picture & diagram, Game, Practice sim |
+| `/learn?style=…` | Module plan for Cooling & airflow: each topic's primary and secondary format, with a style switcher |
+| `/learn/[topic]/[format]` | Lesson page with format tabs and the topic's key facts (renderer placeholder) |
+| `/admin` … | Admin preview: overview, plan imports, content coverage, users & roles (no access control yet) |
 
 ## Try the demo
 
@@ -33,15 +43,8 @@ The build includes TypeScript checking and produces static files in `dist/`.
 
 ## Structure
 
-- `src/main.ts` — app shell, illustrations, screen rendering, navigation, demo state, analytics
-- `src/demo-data.ts` — story copy, trades, lesson cards, and practice questions
-- `src/styles.css` — layout, responsive phone sizing, typography, animations
+- `src/landing/` — original landing experience (`main.ts`, `demo-data.ts`, `phone-intro.ts`, `contact.ts`, `styles.css`)
+- `src/app/` — Next.js App Router pages and `system.css`, the shared design system for the new pages
+- `src/components/` — shared page shell, icons, format drawings, forms
+- `src/lib/` — the sample module from the assignment and the learning-style plan rule
 - `public/` — local fonts, font licenses, favicon, and retained original photo
-- `docs/DESIGN-NOTES.md` — design decisions and verification
-- `index.html` — document metadata and application entry
-
-## Scope
-
-This is a browser prototype, not a released native app or verified training program. There are no accounts, cloud-saved learner records, payments, certificates, or enrollment forms. No credentials are needed locally. Educational content is conceptual and does not instruct visitors to work on real equipment.
-
-Vercel Web Analytics is initialized with `inject()`; collection requires Web Analytics to be enabled on the connected Vercel project. The site remains marked `noindex` while under development.
