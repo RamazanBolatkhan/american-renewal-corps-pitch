@@ -1,17 +1,15 @@
 import type { Metadata } from 'next';
 import { PageShell } from '@/components/PageShell';
 import { AdminNav } from '@/components/AdminNav';
-import { Icon } from '@/components/Icon';
+import { requireStaff } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Admin — American Renewal Corps' };
 
-// Skeleton: no session or role check yet. Better Auth's admin plugin will guard this layout and every admin action.
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+// Every admin page and admin action also checks on its own; this layout check is not the only lock.
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await requireStaff();
   return (
-    <PageShell
-      footerNote="ADMIN PREVIEW · ACCESS CONTROL NOT CONNECTED YET"
-      actions={<span className="ui-role"><Icon name="lock" /> ADMIN PREVIEW</span>}
-    >
+    <PageShell footerNote={`SIGNED IN AS ${session.user.role?.toUpperCase()} · ${session.user.email.toUpperCase()}`}>
       <div className="ui-admin">
         <AdminNav />
         <div style={{ minWidth: 0 }}>{children}</div>

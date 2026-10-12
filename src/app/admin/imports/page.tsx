@@ -1,7 +1,9 @@
-import { Eyebrow, SkeletonNote } from '@/components/PageShell';
+import { Eyebrow, SkeletonNote } from '@/components/ui';
+import { requireStaff } from '@/lib/session';
 import { UploadPanel } from '@/components/UploadPanel';
 
-export default function ImportsPage() {
+export default async function ImportsPage() {
+  await requireStaff();
   return (
     <>
       <div className="ui-admin-head">

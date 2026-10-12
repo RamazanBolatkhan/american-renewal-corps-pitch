@@ -1,7 +1,9 @@
-import { Eyebrow, SkeletonNote } from '@/components/PageShell';
+import { Eyebrow, SkeletonNote } from '@/components/ui';
+import { requireStaff } from '@/lib/session';
 import { coolingModule, formatInfo, formats } from '@/lib/module';
 
-export default function ContentPage() {
+export default async function ContentPage() {
+  await requireStaff();
   return (
     <>
       <div className="ui-admin-head">

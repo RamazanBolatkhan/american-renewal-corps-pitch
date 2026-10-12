@@ -1,8 +1,14 @@
+import Link from 'next/link';
+import { signOut } from '@/app/actions/account';
+import { isStaff } from '@/lib/permissions';
+import { getSession, isMember } from '@/lib/session';
 import { Icon } from './Icon';
+
+export { Eyebrow, SkeletonNote } from './ui';
 
 type Props = {
   children: React.ReactNode;
-  /** Right side of the header. Defaults to account links. */
+  /** Right side of the header for logged-out visitors. Defaults to account links. */
   actions?: React.ReactNode;
   footerNote?: string;
   className?: string;
@@ -18,6 +24,33 @@ export function Wordmark() {
   );
 }
 
+export function SignOutButton() {
+  return (
+    <form action={signOut}>
+      <button className="ui-button ui-button--outline" type="submit">LOG OUT</button>
+    </form>
+  );
+}
+
+async function AccountActions({ fallback }: { fallback?: React.ReactNode }) {
+  const session = await getSession();
+  if (session && isMember(session)) {
+    return (
+      <>
+        {isStaff(session.user.role) && <Link className="ui-link" href="/admin">ADMIN</Link>}
+        <Link className="ui-link ui-account-name" href="/learn" title={session.user.email}>{session.user.name.toUpperCase()}</Link>
+        <SignOutButton />
+      </>
+    );
+  }
+  return fallback ?? (
+    <>
+      <Link className="ui-link" href="/login">LOG IN</Link>
+      <Link className="ui-button ui-button--outline" href="/register">CREATE ACCOUNT <Icon name="arrow" /></Link>
+    </>
+  );
+}
+
 export function PageShell({ children, actions, footerNote = 'INDEPENDENT CONCEPT · SAMPLE LEARNING ONLY', className = '' }: Props) {
   return (
     <div className={`ui ui-shell ${className}`}>
@@ -25,12 +58,7 @@ export function PageShell({ children, actions, footerNote = 'INDEPENDENT CONCEPT
       <header className="ui-header">
         <Wordmark />
         <nav className="ui-header-actions" aria-label="Account">
-          {actions ?? (
-            <>
-              <a className="ui-link" href="/login">LOG IN</a>
-              <a className="ui-button ui-button--outline" href="/register">CREATE ACCOUNT <Icon name="arrow" /></a>
-            </>
-          )}
+          <AccountActions fallback={actions} />
         </nav>
       </header>
       <main id="main" className="ui-main">{children}</main>
@@ -40,12 +68,4 @@ export function PageShell({ children, actions, footerNote = 'INDEPENDENT CONCEPT
       </footer>
     </div>
   );
-}
-
-export function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <p className="ui-eyebrow"><span className="ui-square" aria-hidden="true" />{children}</p>;
-}
-
-export function SkeletonNote({ children }: { children: React.ReactNode }) {
-  return <p className="ui-skeleton-note"><Icon name="lock" />{children}</p>;
 }

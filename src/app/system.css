@@ -241,3 +241,18 @@ body{margin:0;background:var(--green)}
   .ui-style-card:hover{transform:none}
 }
 .ui-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ui-header-actions form{display:contents}
+.ui-account-name{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ui-style-grid form{display:contents}
+.ui-style-card{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
+.ui-segment form{display:contents}
+.ui-segment button{padding:10px 14px;font-size:10px;letter-spacing:.12em;color:var(--text-muted);border:0;border-right:1px solid var(--frame);background:transparent}
+.ui-segment button:last-child{border-right:0}
+.ui-segment button[aria-pressed=true]{background:var(--paper);color:var(--green)}
+.ui-segment button:hover:not([aria-pressed=true]){color:var(--paper)}
+.ui-status--error{background:#c4481b14;border-left-color:#a83a14;color:#7a2a0e}
+.ui-role-form{display:flex;gap:8px;align-items:center}
+.ui-role-form select{background:transparent;color:var(--paper);border:1px solid var(--frame);padding:6px 8px;font:12px var(--body)}
+.ui-role-form select option{color:#06402B}
+.ui-role-form button{background:transparent;color:var(--orange);border:1px solid #ff6b3570;padding:6px 10px;font-size:10px;letter-spacing:.1em}
+@media(max-width:600px){.ui-account-name{display:none}}

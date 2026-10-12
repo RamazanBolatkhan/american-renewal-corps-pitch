@@ -7,10 +7,10 @@ import { FormatArt } from '@/components/FormatArt';
 import { Icon } from '@/components/Icon';
 import { coolingModule, formatInfo, formats, getTopic, isFormat } from '@/lib/module';
 import { buildPlan } from '@/lib/plan';
+import { getLearningStyle, getSession } from '@/lib/session';
 
 type Props = {
   params: Promise<{ topicId: string; format: string }>;
-  searchParams: Promise<{ style?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -19,13 +19,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${topic?.title ?? 'Lesson'} — American Renewal Corps` };
 }
 
-export default async function LessonPage({ params, searchParams }: Props) {
+export default async function LessonPage({ params }: Props) {
   const { topicId, format } = await params;
-  const { style: rawStyle } = await searchParams;
   const topic = getTopic(topicId);
   if (!topic || !isFormat(format)) notFound();
 
-  const style = isFormat(rawStyle) ? rawStyle : format;
+  const session = await getSession();
+  // Visitors who haven't chosen a style can still open a lesson; the viewed format stands in.
+  const style = (session && (await getLearningStyle(session.user.id))) || format;
   const planItem = buildPlan(style, coolingModule.topics.map(t => t.id)).topics.find(t => t.topic_id === topic.id)!;
   const topicIndex = coolingModule.topics.indexOf(topic);
   const next = coolingModule.topics[topicIndex + 1];
@@ -35,14 +36,14 @@ export default async function LessonPage({ params, searchParams }: Props) {
   return (
     <LearnShell>
       <DemoBanner />
-      <Link className="ui-crumb" href={`/learn?style=${style}`}><Icon name="back" /> COOLING &amp; AIRFLOW / YOUR PLAN</Link>
+      <Link className="ui-crumb" href={`/learn`}><Icon name="back" /> COOLING &amp; AIRFLOW / YOUR PLAN</Link>
       <Eyebrow>TOPIC 0{topicIndex + 1} / {formatInfo[format].label.toUpperCase()}</Eyebrow>
       <h1 className="ui-title" style={{ fontSize: 'clamp(40px,5vw,80px)' }}>{topic.title.toUpperCase()}</h1>
       <p className="ui-lede">{topic.objective}</p>
 
       <nav className="ui-tabs" aria-label="Lesson formats">
         {formats.map(f => (
-          <Link key={f} className="ui-tab" href={`/learn/${topic.id}/${f}?style=${style}`} aria-current={f === format ? 'page' : undefined}>
+          <Link key={f} className="ui-tab" href={`/learn/${topic.id}/${f}`} aria-current={f === format ? 'page' : undefined}>
             <em>{role(f)}</em> {formatInfo[f].short}
           </Link>
         ))}
@@ -67,9 +68,9 @@ export default async function LessonPage({ params, searchParams }: Props) {
       </div>
 
       <div className="ui-pager">
-        <Link className="ui-button ui-button--outline" href={`/learn?style=${style}`}><Icon name="back" /> BACK TO PLAN</Link>
+        <Link className="ui-button ui-button--outline" href={`/learn`}><Icon name="back" /> BACK TO PLAN</Link>
         {next && nextPrimary && (
-          <Link className="ui-button ui-button--paper" href={`/learn/${next.id}/${nextPrimary}?style=${style}`}>NEXT: {next.title.toUpperCase()} <Icon name="arrow" /></Link>
+          <Link className="ui-button ui-button--paper" href={`/learn/${next.id}/${nextPrimary}`}>NEXT: {next.title.toUpperCase()} <Icon name="arrow" /></Link>
         )}
       </div>
     </LearnShell>

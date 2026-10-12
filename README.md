@@ -7,6 +7,7 @@ Requires Node.js 22.12+ and npm.
 
 ```sh
 npm ci
+vercel env pull .env.local   # database and auth settings (needs access to the Vercel project)
 npm run dev
 ```
 
@@ -25,11 +26,12 @@ npm run preview   # build, then serve the production build
 |---|---|
 | `/` | The interactive landing page (unchanged experience) with a new **Start learning** button |
 | `/start` | Choose: try the demo, create an account, or log in |
-| `/register`, `/login` | Account forms (skeleton: nothing is sent or saved yet) |
-| `/learn/style` | Choose a learning style: Read, Picture & diagram, Game, Practice sim |
-| `/learn?style=…` | Module plan for Cooling & airflow: each topic's primary and secondary format, with a style switcher |
+| `/register`, `/login` | Email and password accounts (Better Auth). A demo visitor's learning style carries over on sign-up |
+| `/learn/style` | Choose a learning style. Visitors without an account get an anonymous demo account |
+| `/learn` | Module plan for Cooling & airflow: each topic's primary and secondary format, with a saved style switcher |
 | `/learn/[topic]/[format]` | Lesson page with format tabs and the topic's key facts (renderer placeholder) |
-| `/admin` … | Admin preview: overview, plan imports, content coverage, users & roles (no access control yet) |
+| `/admin` … | Staff only (editor, publisher, admin): overview, plan imports, content coverage, users & roles. Admins can change roles |
+| `/no-access` | Shown to logged-in users without a staff role |
 
 ## Try the demo
 
@@ -46,5 +48,6 @@ npm run preview   # build, then serve the production build
 - `src/landing/` — original landing experience (`main.ts`, `demo-data.ts`, `phone-intro.ts`, `contact.ts`, `styles.css`)
 - `src/app/` — Next.js App Router pages and `system.css`, the shared design system for the new pages
 - `src/components/` — shared page shell, icons, format drawings, forms
-- `src/lib/` — the sample module from the assignment and the learning-style plan rule
+- `src/lib/` — sample module, plan rule, Better Auth config, roles and session helpers
+- `src/db/`, `drizzle/` — Drizzle schema, client and migrations for Neon Postgres
 - `public/` — local fonts, font licenses, favicon, and retained original photo

@@ -1,13 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Eyebrow, PageShell } from '@/components/PageShell';
 import { AuthForm } from '@/components/AuthForm';
+import { safeNext } from '@/lib/next-path';
+import { getSession, isMember } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Log in — American Renewal Corps' };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const next = safeNext((await searchParams).next);
+  if (isMember(await getSession())) redirect(next);
+
   return (
-    <PageShell actions={<Link className="ui-button ui-button--outline" href="/register">CREATE ACCOUNT</Link>}>
+    <PageShell actions={<Link className="ui-button ui-button--outline" href={`/register?next=${encodeURIComponent(next)}`}>CREATE ACCOUNT</Link>}>
       <div className="ui-split">
         <section>
           <Eyebrow>WELCOME BACK</Eyebrow>
@@ -16,8 +22,8 @@ export default function LoginPage() {
         </section>
         <section className="ui-paper" aria-labelledby="login-title">
           <h2 id="login-title" className="ui-h2">LOG IN<br /><span>TO ARC.</span></h2>
-          <AuthForm mode="login" />
-          <p className="ui-form-foot">New to ARC? <Link href="/register">Create an account</Link> or <Link href="/learn/style">try the demo</Link></p>
+          <AuthForm mode="login" next={next} />
+          <p className="ui-form-foot">New to ARC? <Link href={`/register?next=${encodeURIComponent(next)}`}>Create an account</Link> or <Link href="/learn/style">try the demo</Link></p>
         </section>
       </div>
     </PageShell>

@@ -1,10 +1,13 @@
+import { getSession, isMember } from '@/lib/session';
 import { PageShell } from './PageShell';
 
-export function DemoBanner() {
+/** Shown to visitors without an account; demo progress is kept only until they leave or register. */
+export async function DemoBanner() {
+  if (isMember(await getSession())) return null;
   return (
     <div className="ui-banner" role="note">
-      <span><strong>DEMO MODE</strong>Progress isn’t saved in this preview.</span>
-      <a href="/register">Create an account to keep it</a>
+      <span><strong>DEMO MODE</strong>Your choices are kept on this device only.</span>
+      <a href="/register">Create an account to keep them</a>
     </div>
   );
 }

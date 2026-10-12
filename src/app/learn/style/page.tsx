@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { chooseLearningStyle } from '@/app/actions/learner';
 import { Eyebrow } from '@/components/PageShell';
 import { DemoBanner, LearnShell } from '@/components/LearnShell';
 import { FormatArt } from '@/components/FormatArt';
 import { Icon } from '@/components/Icon';
-import { formatInfo, formats, isFormat } from '@/lib/module';
+import { formatInfo, formats } from '@/lib/module';
+import { getLearningStyle, getSession } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Choose your learning style — American Renewal Corps' };
 
-export default async function StylePage({ searchParams }: { searchParams: Promise<{ current?: string }> }) {
-  const { current } = await searchParams;
-  const selected = isFormat(current) ? current : undefined;
+export default async function StylePage() {
+  const session = await getSession();
+  const selected = session ? await getLearningStyle(session.user.id) : null;
   return (
     <LearnShell>
       <DemoBanner />
@@ -20,16 +21,16 @@ export default async function StylePage({ searchParams }: { searchParams: Promis
         Your choice decides how each lesson starts. You’ll still learn the same facts as everyone else and see every format along the way.
         You can switch at any time.
       </p>
-      <nav className="ui-style-grid" aria-label="Learning styles">
+      <form className="ui-style-grid" action={chooseLearningStyle} aria-label="Learning styles">
         {formats.map(format => (
-          <Link key={format} className="ui-style-card" href={`/learn?style=${format}`} aria-current={selected === format ? 'true' : undefined}>
+          <button key={format} className="ui-style-card" type="submit" name="style" value={format} aria-current={selected === format ? 'true' : undefined}>
             <FormatArt format={format} />
             <h2>{formatInfo[format].label.toUpperCase()}</h2>
             <p>{formatInfo[format].description}</p>
             <span className="ui-label">{selected === format ? 'CURRENT STYLE' : 'START HERE'} <Icon name="arrow" /></span>
-          </Link>
+          </button>
         ))}
-      </nav>
+      </form>
     </LearnShell>
   );
 }

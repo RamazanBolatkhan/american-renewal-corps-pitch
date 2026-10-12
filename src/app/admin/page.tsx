@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Eyebrow, SkeletonNote } from '@/components/PageShell';
+import { Eyebrow, SkeletonNote } from '@/components/ui';
+import { requireStaff } from '@/lib/session';
 import { Icon } from '@/components/Icon';
 import { coolingModule, formats } from '@/lib/module';
 
@@ -12,7 +13,8 @@ const steps = [
   ['Publish', 'A publisher releases the topic to students.'],
 ];
 
-export default function AdminOverview() {
+export default async function AdminOverview() {
+  await requireStaff();
   const facts = coolingModule.topics.reduce((sum, topic) => sum + topic.facts.length, 0);
   const stats = [
     [1, 'MODULES'],
