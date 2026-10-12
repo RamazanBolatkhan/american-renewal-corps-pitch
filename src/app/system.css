@@ -279,3 +279,4 @@ body{margin:0;background:var(--green)}
 .ui-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .ui-source{max-height:420px;overflow:auto;white-space:pre-wrap;font:12px/1.6 ui-monospace,Menlo,monospace;color:var(--text-soft);background:#00180d66;border:1px solid var(--frame);padding:16px}
 .ui-details summary{cursor:pointer;font-size:11px;letter-spacing:.12em;color:var(--text-muted)}
+.ui-drop--active{border-color:var(--orange);border-style:solid;background:#ff6b3512}
