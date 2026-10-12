@@ -4,7 +4,7 @@ import * as React from 'react';
 import { translateAlong } from '@/components/iso/iso-kit';
 import { IsoFigure, Plate } from '@/components/iso/react/draw';
 import { follow, useLoop, useReadout } from '@/components/iso/react/live';
-import { faultsOf, inletTemps, inRange, readoutOf, type HallState } from './model';
+import { faultsOf, inletTemps, inRange, partInfo, readoutOf, toggled, type HallState } from './model';
 import { HEIGHT, P, WIDTH } from './view';
 
 const DOOR_TRAVEL = 24;
@@ -25,10 +25,14 @@ type Props = {
   caption?: React.ReactNode;
   /** Called with the `data-part` of whatever was clicked, for games and sims. */
   onPart?: (part: string) => void;
+  /** Lets the student change the scene directly: click or press Enter on a door, rack, panel or tile. */
+  onChange?: (next: HallState) => void;
 };
 
 /** The data-hall figure. Static art comes in from the server; this only shows, hides and moves. */
-export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold aisle', hint = 'Example readings', caption, onPart }: Props) {
+export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold aisle', hint = 'Example readings', caption, onPart, onChange }: Props) {
+  const interactive = Boolean(onChange);
+  const defaultHint = interactive ? 'Hover a part · click to change it' : hint;
   const root = React.useRef<SVGGElement>(null);
   const { anchor, say } = useReadout<HTMLDivElement>();
   const doors = React.useRef<Record<string, number>>({});
@@ -58,6 +62,43 @@ export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold a
     say(readoutOf(state));
   }, [state, say, target]);
 
+  // Every part explains itself on hover or focus; changeable parts are buttons when the scene is interactive.
+  const showHint = React.useCallback((text: string) => {
+    const corner = anchor.current?.querySelector('[data-corner="hint"]');
+    if (corner) corner.textContent = text;
+  }, [anchor]);
+  const describe = React.useCallback((part: string | null) => {
+    const info = part ? partInfo(part, state) : null;
+    showHint(info ? `${info.name}${info.action && interactive ? ` · ${info.action}` : ''}` : defaultHint);
+    const note = anchor.current?.querySelector('.hall-note');
+    if (note) note.textContent = info ? `${info.name}: ${info.does}` : '';
+  }, [state, interactive, defaultHint, showHint, anchor]);
+  const hovered = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    el.querySelectorAll<SVGGElement>('[data-part]').forEach(node => {
+      const part = node.dataset.part!;
+      const info = partInfo(part, state);
+      if (!info) return;
+      const changeable = interactive && toggled(part, state) !== null;
+      node.setAttribute('tabindex', '0');
+      node.setAttribute('role', changeable ? 'button' : 'img');
+      node.setAttribute('aria-label', `${info.name}. ${info.does}${changeable && info.action ? ` ${info.action}.` : ''}`);
+      node.toggleAttribute('data-changeable', changeable);
+    });
+    if (hovered.current) describe(hovered.current);
+  }, [state, interactive, describe]);
+
+  const act = (part: string | null | undefined) => {
+    if (!part) return;
+    onPart?.(part);
+    const next = onChange ? toggled(part, state) : null;
+    if (next) onChange!(next);
+  };
+  const partOf = (target: EventTarget | null) => (target as Element | null)?.closest?.('[data-part]')?.getAttribute('data-part') ?? null;
+
   // Door leaves slide with an eased follow.
   const tick = React.useCallback((dt: number, calm: boolean) => {
     const el = root.current;
@@ -83,7 +124,7 @@ export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold a
 
   return (
     <div className="iso hall" ref={anchor}>
-      <Plate fig={fig} title={title} hint={hint} readout={readoutOf(state)} caption={caption}
+      <Plate fig={fig} title={title} hint={defaultHint} readout={readoutOf(state)} caption={caption}
         keys={[
           { mark: 'blue', label: 'Cool supply air' },
           { mark: 'red', label: 'Hot exhaust' },
@@ -93,15 +134,23 @@ export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold a
         <IsoFigure width={WIDTH} height={HEIGHT} label={label}>
           <g
             ref={root}
-            onClick={onPart ? event => {
-              const part = (event.target as Element).closest('[data-part]')?.getAttribute('data-part');
-              if (part) onPart(part);
-            } : undefined}
+            className={interactive ? 'hall-interactive' : 'hall-explain'}
+            onClick={event => act(partOf(event.target))}
+            onKeyDown={event => {
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              event.preventDefault();
+              act(partOf(event.target));
+            }}
+            onPointerOver={event => { hovered.current = partOf(event.target); describe(hovered.current); }}
+            onPointerLeave={() => { hovered.current = null; describe(null); }}
+            onFocus={event => { hovered.current = partOf(event.target); describe(hovered.current); }}
+            onBlur={() => { hovered.current = null; describe(null); }}
           >
             {art}
           </g>
         </IsoFigure>
       </Plate>
+      <p className="hall-note" aria-live="polite" />
       <p className="ui-sr" aria-live="polite">{readoutOf(state)}</p>
     </div>
   );

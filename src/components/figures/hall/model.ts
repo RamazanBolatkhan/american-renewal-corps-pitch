@@ -58,3 +58,69 @@ export function faultsOf(state: HallState): string[] {
   if (state.tile === 'hot') faults.push('a perforated tile sits in the hot aisle');
   return faults;
 }
+
+/* ---------- Direct interaction: what each part is, and what clicking it changes ---------- */
+
+export type PartInfo = { name: string; does: string; action?: string };
+
+/** Plain-language description of a part, tied to the brief's facts. */
+export function partInfo(part: string, state: HallState): PartInfo | null {
+  const rack = part.match(/^rack-([ab])(\d)$/);
+  if (rack) {
+    const n = Number(rack[2]);
+    if (rack[1] === 'b') return { name: `Rack B${n + 1}`, does: 'Faces the cold aisle from the other side; cut away so you can see in.' };
+    const wrong = state.reversed === n;
+    return {
+      name: `Rack A${n + 1}`,
+      does: wrong ? 'Facing the wrong way: it blows hot exhaust into the cold aisle.' : 'Draws cool air in at the front and pushes hot air out the back.',
+      action: wrong ? 'Click to turn it the right way' : 'Click to turn it around',
+    };
+  }
+  const blank = part.match(/^blank-a(\d)$/);
+  if (blank) {
+    const missing = state.missingBlank === Number(blank[1]);
+    return {
+      name: missing ? 'Empty rack space' : 'Blanking panel',
+      does: missing ? 'Exhaust flows back through the gap to the rack front.' : 'Covers an empty space so exhaust cannot flow back to the front.',
+      action: missing ? 'Click to fit the panel' : 'Click to remove it',
+    };
+  }
+  if (part === 'door-far' || part === 'door-near') {
+    const open = (part === 'door-far' ? state.doorFar : state.doorNear) === 'open';
+    return {
+      name: `${part === 'door-far' ? 'Far' : 'Near'} containment door`,
+      does: open ? 'Open: hot exhaust leaks into the cold aisle.' : 'Closed: keeps hot and cold air apart.',
+      action: open ? 'Click to close it' : 'Click to open it',
+    };
+  }
+  if (part === 'tile-movable') {
+    const hot = state.tile === 'hot';
+    return {
+      name: 'Perforated floor tile',
+      does: hot ? 'In the hot aisle: its cold air is wasted.' : 'In the cold aisle: delivers cold air to the rack fronts.',
+      action: hot ? 'Click to move it back to the cold aisle' : 'Click to move it to the hot aisle',
+    };
+  }
+  if (part === 'perf-tile') return { name: 'Perforated floor tile', does: 'Delivers cold air from under the floor to the rack fronts.' };
+  if (part === 'cooling-unit') return { name: 'Cooling unit', does: 'Takes in the hot return air at the top and supplies cold air under the floor.' };
+  if (part === 'roof') return { name: 'Containment roof panel', does: 'Closes the top of the cold aisle so hot and cold air cannot mix.' };
+  return null;
+}
+
+/** The state after clicking a part, or null when the part only explains itself. */
+export function toggled(part: string, state: HallState): HallState | null {
+  const rack = part.match(/^rack-a(\d)$/);
+  if (rack) {
+    const n = Number(rack[1]);
+    return { ...state, reversed: state.reversed === n ? null : n };
+  }
+  const blank = part.match(/^blank-a(\d)$/);
+  if (blank) {
+    const n = Number(blank[1]);
+    return { ...state, missingBlank: state.missingBlank === n ? null : n };
+  }
+  if (part === 'door-far') return { ...state, doorFar: state.doorFar === 'open' ? 'closed' : 'open' };
+  if (part === 'door-near') return { ...state, doorNear: state.doorNear === 'open' ? 'closed' : 'open' };
+  if (part === 'tile-movable') return { ...state, tile: state.tile === 'hot' ? 'cold' : 'hot' };
+  return null;
+}

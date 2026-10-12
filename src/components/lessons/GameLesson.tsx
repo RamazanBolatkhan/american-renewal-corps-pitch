@@ -34,6 +34,8 @@ const sceneOf = (scene?: SceneState): HallState => ({ ...healthyHall, ...scene }
  */
 export function GameLesson({ content, art }: { content: GameContent; art?: React.ReactNode }) {
   const [active, setActive] = React.useState<Item | null>(null);
+  // The student's own changes to the scene; hovering a statement previews it instead.
+  const [own, setOwn] = React.useState<HallState>(healthyHall);
   const [checked, setChecked] = React.useState(false);
   const usesScene = art && content.items.some(i => i.scene);
   const facts = [...new Set(content.items.flatMap(i => i.facts))].sort();
@@ -44,15 +46,18 @@ export function GameLesson({ content, art }: { content: GameContent; art?: React
       {usesScene && (
         <HallScene
           art={art}
-          state={sceneOf(active?.scene)}
+          state={active ? sceneOf(active.scene) : own}
+          onChange={next => { setActive(null); setOwn(next); }}
           fig="Game"
-          title={active ? 'What it looks like' : 'Select a statement'}
-          hint="Example readings"
+          title={active ? 'What it looks like' : 'Try it: change the hall'}
+          caption="Hover a statement to see it, or click doors, racks, blanking panels and the loose tile to try things yourself. Example readings."
         />
       )}
+      <div onMouseLeave={() => setActive(null)} onBlur={() => setActive(null)}>
       {content.kind === 'sort' && <SortGame content={content} onActive={setActive} checked={checked} setChecked={setChecked} />}
       {content.kind === 'order' && <OrderGame content={content} onActive={setActive} checked={checked} setChecked={setChecked} />}
       {content.kind === 'match' && <MatchGame content={content} onActive={setActive} checked={checked} setChecked={setChecked} />}
+      </div>
       <p className="ui-small">This game covers <FactChips facts={facts} />.</p>
     </article>
   );

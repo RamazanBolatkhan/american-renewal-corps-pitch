@@ -55,11 +55,13 @@ function Floor() {
 }
 
 /** A perforated floor tile: an inset outline and a grid of holes on the floor top. */
-function PerfTile({ tile, when }: { tile: k.Plan; when?: string }) {
+function PerfTile({ tile, when, part = 'perf-tile' }: { tile: k.Plan; when?: string; part?: string }) {
   const inner = k.insetPlan(tile, 2.4);
   const dots = k.dotGrid(inner.x + 1.6, inner.y + 1.6, 8, 8, (inner.w - 3.2) / 7, 0.05, P);
   return (
-    <g data-when={when} data-part="tile">
+    <g data-when={when} data-part={part}>
+      {/* An invisible hit area over the whole tile, so it is easy to point at. */}
+      <path className="hall-hit" d={k.planOutline(tile, 0.05, P, 2)} />
       <Line d={k.planOutline(inner, 0.05, P, 2)} tone="lo" />
       <Dots points={dots} size={0.42} tone="mid" />
     </g>
@@ -126,7 +128,7 @@ function RackA({ index }: { index: number }) {
       <Line d={facePoly(x + 1.4, x + RACK_W - 1.4, y, 3, RACK_H - 3)} tone="lo" />
       {slots.map((s, i) =>
         s.blank ? (
-          <g key={i}>
+          <g key={i} data-part={`blank-a${index}`}>
             <g data-when={`missingBlank!=${index}`}>
               <Solid paths={k.slabOf(plan(x + 2, y, RACK_W - 4, 0.8, 0.2), s.z, s.h, P, 2)} tone="lo" crease="none" />
               <Dots points={[at([x + 3.4, y + 0.8, s.z + s.h / 2]), at([x + RACK_W - 3.4, y + 0.8, s.z + s.h / 2])]} size={0.45} tone="mid" />
@@ -227,7 +229,7 @@ function Leaf({ end, side }: { end: 'far' | 'near'; side: -1 | 1 }) {
   const win = [[y0 + 3, 40], [y1 - 3, 78]] as const;
   const pullY = side < 0 ? y1 - 3 : y0 + 3;
   return (
-    <g data-leaf={`${end}:${side}`}>
+    <g data-leaf={`${end}:${side}`} data-part={`door-${end}`}>
       <Solid paths={leaf} tone="hi" crease="lo" />
       <Line d={path3([[xf, win[0][0], win[0][1]], [xf, win[1][0], win[0][1]], [xf, win[1][0], win[1][1]], [xf, win[0][0], win[1][1]]], true)} tone="lo" />
       <Line d={path3([[xf, win[0][0] + 1.2, win[0][1] + 1.2], [xf, win[1][0] - 1.2, win[0][1] + 1.2], [xf, win[1][0] - 1.2, win[1][1] - 1.2], [xf, win[0][0] + 1.2, win[1][1] - 1.2]], true)} tone="faint" />
@@ -250,14 +252,17 @@ function coolFlows() {
   const flows: [number, number, number][] = [
     [ROW_X + 2 * TILE + 12, AISLE.y0 + 12, 30], // tile in front of rack A3
     [ROW_X + TILE + 12, 12, 48], // centre tile, into rack A2
-    [ROW_X + 3 * TILE + 12, 12, 40], // near tile, into rack A4
+    [ROW_X + TILE + 12, AISLE.y0 + 12, 40], // the movable tile, while it is in the cold aisle
   ];
   return flows.map(([x, y, z], i) => {
     // End on the left end of a server's rule line, so the flow lands on a drawn part of the rack.
     const rackX = ROW_X + Math.floor(x / RACK_W) * RACK_W;
     const slot = serverSlots().filter(sl => !sl.blank).reduce((best, sl) => (Math.abs(sl.z + sl.h / 2 - z) < Math.abs(best.z + best.h / 2 - z) ? sl : best));
     const end: Point3 = [rackX + 4, AISLE.y0 + 1.6, slot.z + slot.h / 2];
-    const pts = curve([x, y, 0.2], [x, y - 2, end[2] + 16], end, 16);
+    // Start on a perforation hole of the tile (PerfTile's 8 × 8 grid), so the flow rises from a drawn hole.
+    const gap = (TILE - 4.8 - 3.2) / 7;
+    const hole: Point3 = [x - TILE / 2 + 4 + gap * 4, y - TILE / 2 + 4 + gap * 4, 0.05];
+    const pts = curve(hole, [hole[0], hole[1] - 2, end[2] + 16], end, 16);
     return { key: depth([x, y, 0]), d: path3(pts), id: `cool-${i}` };
   });
 }
@@ -285,7 +290,10 @@ export function HallArt() {
   add(depth([CRAH.x + CRAH.w / 2, CRAH.y + CRAH.d / 2, 0]), <CoolingUnit key="crah" />);
   for (const r of hotReturns()) add(r.key, <Line key={r.id} d={r.d} tone="red" flow />);
   for (let i = 0; i < RACKS; i++) add(depth([ROW_X + i * RACK_W + RACK_W / 2, ROW_A.y + RACK_D / 2, 0]), <RackA key={`a${i}`} index={i} />);
-  for (const f of coolFlows()) add(f.key + 20, <Line key={f.id} d={f.d} tone="blue" flow />);
+  // The last cool flow rises from the movable tile, so it disappears when the tile is moved to the hot aisle.
+  coolFlows().forEach((f, i, all) => add(f.key + 20, (
+    <g key={f.id} data-when={i === all.length - 1 ? 'tile=cold' : undefined}><Line d={f.d} tone="blue" flow /></g>
+  )));
 
   // Reversed rack exhaust: blown from its rear across the cold aisle onto the cut row opposite.
   for (let i = 0; i < RACKS; i++) {
@@ -341,9 +349,9 @@ export function HallArt() {
       <PerfTile tile={plan(ROW_X, AISLE.y0, TILE, TILE)} />
       <PerfTile tile={plan(ROW_X + 2 * TILE, AISLE.y0, TILE, TILE)} />
       <PerfTile tile={plan(ROW_X + TILE, 0, TILE, TILE)} />
-      <PerfTile tile={TILE_HOME} when="tile=cold" />
-      <g data-when="tile=hot" data-fault="tile">
-        <PerfTile tile={TILE_HOT} />
+      <PerfTile tile={TILE_HOME} when="tile=cold" part="tile-movable" />
+      <g data-when="tile=hot" data-fault="tile" data-part="tile-movable">
+        <PerfTile tile={TILE_HOT} part="tile-movable" />
         <Line d={k.planOutline(k.insetPlan(TILE_HOT, 0.6), 0.05, P, 2)} tone="lit" />
       </g>
       {items.map((item, i) => <React.Fragment key={i}>{item.node}</React.Fragment>)}

@@ -20,7 +20,7 @@ export function HallDemo({ art, initial = healthyHall }: { art: React.ReactNode;
   );
   return (
     <div className="hall-demo">
-      <HallScene art={art} state={state} caption="Illustrative model: temperatures are example readings that follow the brief’s rules, not measurements." />
+      <HallScene art={art} state={state} onChange={setState} caption="Click a door, rack, blanking panel or the loose floor tile to change it. Illustrative model: temperatures are example readings that follow the brief’s rules, not measurements." />
       <div className="hall-controls" role="group" aria-label="Scene state">
         <label className="hall-control"><input type="checkbox" checked={state.doorFar === 'open'} onChange={e => set({ doorFar: e.target.checked ? 'open' : 'closed' })} /> Far door open</label>
         <label className="hall-control"><input type="checkbox" checked={state.doorNear === 'open'} onChange={e => set({ doorNear: e.target.checked ? 'open' : 'closed' })} /> Near door open</label>
