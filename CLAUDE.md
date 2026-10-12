@@ -5,7 +5,8 @@ Independent interview pitch project; not the organization's official production 
 ## Stack and commands
 - Next.js 16 (App Router) + React + TypeScript + plain CSS.
 - Neon Postgres (Vercel Marketplace, shared by production, previews and local) via Drizzle ORM and `pg`. Better Auth for email/password accounts, anonymous demo users, and roles.
-- Environment settings live in Vercel (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `ADMIN_EMAIL`); `vercel env pull .env.local` fetches them. Names are listed in `.env.example`. Never commit values.
+- Vercel Blob (private store `arc-plan-uploads`) holds uploaded learning plans. AI runs through Vercel AI Gateway with the AI SDK (`ai`) and Zod; the gateway needs paid credits for Claude models.
+- Environment settings live in Vercel (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `ADMIN_EMAIL`, `BLOB_READ_WRITE_TOKEN`, optional `EXTRACTION_MODEL`); `vercel env pull .env.local` fetches them. Names are listed in `.env.example`. Never commit values.
 - Use Node.js 22.12+.
 - Install reproducibly: `npm ci`.
 - Validate and produce the production build: `npm run build` (includes TypeScript checking). `npm run check` runs TypeScript alone.
@@ -19,6 +20,7 @@ Independent interview pitch project; not the organization's official production 
 - `src/components/`: shared UI (`PageShell`, `Icon`, `FormatArt`, `AuthForm`, `AdminNav`, `UploadPanel`, `LearnShell`).
 - `src/lib/module.ts`: the Cooling & airflow sample module from the ARC assignment. `src/lib/plan.ts`: the learning-style plan rule.
 - `src/lib/auth.ts` (Better Auth config), `auth-client.ts`, `permissions.ts` (roles: student, editor, publisher, admin), `session.ts` (`getSession`, `requireStaff`, `requireAdmin`). `src/db/`: Drizzle client and schema; `drizzle/`: migrations. `src/app/actions/`: server actions. `src/proxy.ts`: cookie-only redirect for `/admin`.
+- `src/lib/content/plan.ts` (Zod schema for an extracted plan, source-quote checks), `src/lib/content/extract.ts` (reads the uploaded file and runs AI extraction). `src/app/actions/imports.ts` (start, retry, save, approve). `src/app/api/admin/uploads/route.ts` issues Blob upload tokens to staff.
 - `public/`: locally hosted images and fonts, font licenses, favicon.
 - `docs/DESIGN-NOTES.md`: design direction, asset sources, and prior verification.
 - `docs/PROJECT-BRIEF.md`: original setup brief; later direction is recorded in design notes and this file.
@@ -27,7 +29,7 @@ Independent interview pitch project; not the organization's official production 
 - Preserve primary green #06402B with cream #F3F2E9 and orange #FF6B35 unless asked to change them.
 - Preserve the bold condensed type, editorial grid, technical illustrations, and framed cards.
 - The landing page (`/`) is a single-screen, no-page-scroll experience: animated story on the left and a clickable phone prototype on the right. Keep phone navigation and story content synchronized. Other pages scroll normally and use `src/app/system.css`.
-- Demo XP on the landing phone is earned once per lesson/practice per trade and resets on refresh. Accounts are real (email and password; no email verification yet). Demo visitors get an anonymous account whose learning style moves to their account on sign-up. Lessons, imports and progress are still placeholders and must say so. Never imply certifications.
+- Demo XP on the landing phone is earned once per lesson/practice per trade and resets on refresh. Accounts are real (email and password; no email verification yet). Demo visitors get an anonymous account whose learning style moves to their account on sign-up. Plan imports are real: upload → AI extraction with a source quote per fact → editor review → publisher approval, which saves a new brief version per topic. Lesson generation, renderers and progress are still placeholders and must say so. Extraction must copy source wording and report gaps as issues, never invent content. Never imply certifications.
 - Focus on retraining for skilled trades serving data infrastructure, electrification, building systems, and industry.
 - Training pathways are proposed concepts. Do not invent partnerships, credentials, tuition, start dates, statistics, testimonials, or placement guarantees.
 - Keep responsive behavior, keyboard-operable controls, focus states, mobile enlargement, and reduced-motion support.

@@ -33,3 +33,9 @@ export function isRole(value: unknown): value is Role {
 export function isStaff(role: string | null | undefined) {
   return staffRoles.includes(role as Role);
 }
+
+/** Checks a role against the access-control rules above. */
+export function can(role: string | null | undefined, action: 'upload' | 'edit' | 'regenerate' | 'publish') {
+  if (!isRole(role)) return false;
+  return roles[role].authorize({ content: [action] }).success;
+}

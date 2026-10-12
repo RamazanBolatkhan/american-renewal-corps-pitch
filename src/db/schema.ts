@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { user } from './auth-schema';
 
 export * from './auth-schema';
@@ -10,3 +10,76 @@ export const learnerProfile = pgTable('learner_profile', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdate(() => new Date()),
 });
+
+/* ---------- Plan imports: upload → AI extraction → review → approve ---------- */
+
+export const importStatuses = ['extracting', 'needs_review', 'approved', 'failed'] as const;
+export type ImportStatus = (typeof importStatuses)[number];
+
+export const importJob = pgTable('import_job', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  fileName: text('file_name').notNull(),
+  blobPathname: text('blob_pathname').notNull(),
+  contentType: text('content_type').notNull(),
+  size: integer('size').notNull(),
+  uploadedBy: text('uploaded_by').references(() => user.id, { onDelete: 'set null' }),
+  status: text('status').$type<ImportStatus>().notNull(),
+  sourceText: text('source_text'),
+  /** Editable draft in the ExtractedPlan shape (src/lib/content/plan.ts). */
+  draft: jsonb('draft'),
+  issues: jsonb('issues').$type<{ where: string; message: string }[]>().default([]).notNull(),
+  error: text('error'),
+  model: text('model'),
+  moduleId: text('module_id'),
+  approvedBy: text('approved_by').references(() => user.id, { onDelete: 'set null' }),
+  approvedAt: timestamp('approved_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdate(() => new Date()),
+});
+
+/* ---------- Curriculum: modules → topics → versioned briefs → facts ---------- */
+
+export const curriculumModule = pgTable('module', {
+  id: text('id').primaryKey(), // slug, e.g. "cooling-airflow"
+  title: text('title').notNull(),
+  program: text('program'),
+  labTask: text('lab_task').notNull(),
+  skills: jsonb('skills').$type<string[]>().default([]).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdate(() => new Date()),
+});
+
+export const topic = pgTable('topic', {
+  id: text('id').primaryKey(), // "<module>--<topic slug>"
+  moduleId: text('module_id').notNull().references(() => curriculumModule.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  position: integer('position').notNull(),
+});
+
+/** Briefs are never edited in place: every approved import adds a new version. */
+export const brief = pgTable(
+  'brief',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    topicId: text('topic_id').notNull().references(() => topic.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    objective: text('objective').notNull(),
+    commonMistake: text('common_mistake').notNull(),
+    importJobId: uuid('import_job_id').references(() => importJob.id, { onDelete: 'set null' }),
+    createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => [unique('brief_topic_version').on(table.topicId, table.version)],
+);
+
+export const briefFact = pgTable(
+  'brief_fact',
+  {
+    briefId: uuid('brief_id').notNull().references(() => brief.id, { onDelete: 'cascade' }),
+    key: text('key').notNull(), // "f1"
+    text: text('text').notNull(),
+    sourceQuote: text('source_quote'),
+    position: integer('position').notNull(),
+  },
+  table => [primaryKey({ columns: [table.briefId, table.key] })],
+);

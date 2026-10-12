@@ -31,6 +31,7 @@ npm run preview   # build, then serve the production build
 | `/learn` | Module plan for Cooling & airflow: each topic's primary and secondary format, with a saved style switcher |
 | `/learn/[topic]/[format]` | Lesson page with format tabs and the topic's key facts (renderer placeholder) |
 | `/admin` … | Staff only (editor, publisher, admin): overview, plan imports, content coverage, users & roles. Admins can change roles |
+| `/admin/imports` | Upload a learning plan (PDF, Markdown, text, JSON). AI drafts the module, topics, facts and common mistakes; editors review against source quotes; publishers approve |
 | `/no-access` | Shown to logged-in users without a staff role |
 
 ## Try the demo
