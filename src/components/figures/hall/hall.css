@@ -1,0 +1,27 @@
+/* ARC tokens for the data-hall figure: deep greens, cream lines, orange for the one thing to watch. */
+.iso.hall{
+  --anatomy-card:#05301f;--anatomy-paper:#05301f;--anatomy-face:#0f4a33;--anatomy-top:#0e4730;
+  --anatomy-shade-0:#04281a;--anatomy-shade-1:#062e1f;--anatomy-shade-2:#083524;--anatomy-shade-3:#0a3c29;
+  --anatomy-lit-top:#3a2a1c;--anatomy-lit-shade:#2c2216;
+  --anatomy-hi:#f3f2e9;--anatomy-mid:#9fbaa8;--anatomy-lo:#5d8670;--anatomy-faint:#2f5f47;--anatomy-lit:#ff6b35;
+  --anatomy-halo:#00140b;--anatomy-dot:#f3f2e9;
+  --anatomy-red:#ff6b35;--anatomy-blue:#9ccddc;
+  --anatomy-text:#d5e1d6;--anatomy-strong:#f3f2e9;--anatomy-muted:#a7bdad;
+  color:var(--anatomy-text);
+}
+.iso.hall .iso-plate{box-shadow:0 0 0 1px #f3f2e937}
+.iso.hall .iso-figure{margin:0}
+.hall-void{fill:#00140b;stroke:none}
+.hall-fan{fill:none;stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight)}
+.hall-lcd{fill:#8fd3a8;font-family:var(--anatomy-mono);font-variant-numeric:tabular-nums}
+.hall-lcd[data-hot]{fill:var(--anatomy-lit)}
+.iso.hall [data-part]{cursor:default}
+.iso.hall .iso-line[data-tone="red"][data-flow],.iso.hall .iso-line[data-tone="blue"][data-flow]{stroke-width:1.5;stroke-dasharray:3.5 4.5}
+.hall-lcd-window{fill:#00140b;stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight)}
+/* Phones: scale the drawing up inside the card and crop the empty floor margins. */
+.iso.hall .iso-plate{overflow:hidden}
+@media (max-width:560px){
+  .iso.hall .iso-svg{width:122%;max-width:none;margin:-4% -11% -6%}
+}
+.iso.hall .iso-swatch[data-mark="blue"] path{stroke:var(--anatomy-blue)}
+.iso.hall .iso-swatch[data-mark="red"] path{stroke:var(--anatomy-red)}

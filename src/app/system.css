@@ -338,3 +338,8 @@ body{margin:0;background:var(--green)}
 @media(prefers-reduced-motion:reduce){.diagram-el{transition:none}}
 .diagram-text{paint-order:stroke;stroke:#022a1c;stroke-width:4px;stroke-linejoin:round}
 .ui-drop--active{border-color:var(--orange);border-style:solid;background:#ff6b3512}
+.hall-demo{display:grid;gap:16px}
+.hall-controls{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;border:1px solid var(--frame);padding:14px 16px;font-size:13px;color:var(--text-soft)}
+.hall-control{display:inline-flex;gap:8px;align-items:center}
+.hall-control select{background:transparent;color:var(--paper);border:1px solid var(--frame);padding:5px 8px;font:13px var(--body)}
+.hall-control select option{color:#06402B}
