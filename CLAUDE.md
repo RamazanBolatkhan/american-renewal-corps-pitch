@@ -9,7 +9,7 @@ Independent interview pitch project; not the organization's official production 
 - Environment settings live in Vercel (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `ADMIN_EMAIL`, `BLOB_READ_WRITE_TOKEN`, optional `EXTRACTION_MODEL`); `vercel env pull .env.local` fetches them. Names are listed in `.env.example`. Never commit values.
 - Use Node.js 22.12+.
 - Install reproducibly: `npm ci`.
-- Validate and produce the production build: `npm run build` (includes TypeScript checking). `npm run check` runs TypeScript alone.
+- Validate and produce the production build: `npm run build` (includes TypeScript checking). `npm run check` runs TypeScript alone. `npm test` runs the Vitest content checks.
 - Local development: `npm run dev`. Production preview: `npm run preview` (build, then `next start`).
 - Database: change `src/db/schema.ts`, then `npm run db:generate` and `npm run db:migrate`. After changing Better Auth plugins, `npm run auth:schema` regenerates `src/db/auth-schema.ts`. Local runs use the same database as production, so delete any test accounts you create.
 - Generated `.next/` and `node_modules/` are ignored. `vercel.json` sets the Vercel framework, build command and output folder to Next.js values, overriding the project's original Vite settings.
@@ -20,6 +20,7 @@ Independent interview pitch project; not the organization's official production 
 - `src/components/`: shared UI (`PageShell`, `Icon`, `FormatArt`, `AuthForm`, `AdminNav`, `UploadPanel`, `LearnShell`).
 - `src/lib/module.ts`: the Cooling & airflow sample module from the ARC assignment. `src/lib/plan.ts`: the learning-style plan rule.
 - `src/lib/auth.ts` (Better Auth config), `auth-client.ts`, `permissions.ts` (roles: student, editor, publisher, admin), `session.ts` (`getSession`, `requireStaff`, `requireAdmin`). `src/db/`: Drizzle client and schema; `drizzle/`: migrations. `src/app/actions/`: server actions. `src/proxy.ts`: cookie-only redirect for `/admin`.
+- `src/lib/content/lessons.ts`: Zod schemas for lessons (read, diagram, game, sim), questions and the module plan, plus `checkLesson` / `checkQuestion` (fact coverage, unknown facts, 150–250 words for Read, diagram bounds, solvable games, one correct answer). `src/content/cooling-airflow.ts`: hand-written sample lessons in those shapes. `src/components/lessons/`: renderers.
 - `src/lib/content/plan.ts` (Zod schema for an extracted plan, source-quote checks), `src/lib/content/extract.ts` (reads the uploaded file and runs AI extraction). `src/app/actions/imports.ts` (start, retry, save, approve). `src/app/api/admin/uploads/route.ts` issues Blob upload tokens to staff.
 - `public/`: locally hosted images and fonts, font licenses, favicon.
 - `docs/DESIGN-NOTES.md`: design direction, asset sources, and prior verification.

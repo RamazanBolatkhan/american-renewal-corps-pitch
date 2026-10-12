@@ -18,6 +18,7 @@ Open the URL printed by Next.js (normally http://127.0.0.1:3000).
 ```sh
 npm run build     # TypeScript check + production build
 npm run preview   # build, then serve the production build
+npm test          # content checks for every lesson and question
 ```
 
 ## Pages

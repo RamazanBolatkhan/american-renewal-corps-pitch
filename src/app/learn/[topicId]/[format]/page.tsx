@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation';
 import { Eyebrow, SkeletonNote } from '@/components/PageShell';
 import { DemoBanner, LearnShell } from '@/components/LearnShell';
 import { FormatArt } from '@/components/FormatArt';
+import { DiagramLesson } from '@/components/lessons/DiagramLesson';
+import { ReadLesson } from '@/components/lessons/ReadLesson';
+import { getSampleLesson, getSampleQuestions } from '@/lib/content/sample';
 import { Icon } from '@/components/Icon';
 import { coolingModule, formatInfo, formats, getTopic, isFormat } from '@/lib/module';
 import { buildPlan } from '@/lib/plan';
@@ -31,6 +34,9 @@ export default async function LessonPage({ params }: Props) {
   const topicIndex = coolingModule.topics.indexOf(topic);
   const next = coolingModule.topics[topicIndex + 1];
   const nextPrimary = next ? buildPlan(style, [next.id]).topics[0].primary : undefined;
+  const lesson = getSampleLesson(topic.id, format);
+  // The Read lesson ends with a check on the fact its common mistake is about.
+  const check = getSampleQuestions(topic.id).find(q => q.options.some(o => o.fromCommonMistake)) ?? getSampleQuestions(topic.id)[0];
   const role = (f: string) => (f === planItem.primary ? 'START' : f === planItem.secondary ? 'THEN' : 'ALSO');
 
   return (
@@ -50,20 +56,26 @@ export default async function LessonPage({ params }: Props) {
       </nav>
 
       <div className="ui-lesson">
-        <section className="ui-renderer" aria-label={`${formatInfo[format].label} lesson`}>
-          <div>
-            <FormatArt format={format} />
-            <h2 className="ui-h3" style={{ margin: '18px 0 10px' }}>{formatInfo[format].label.toUpperCase()} LESSON</h2>
-            <p>{formatInfo[format].description} This lesson will be generated from the topic’s content brief, and every part of it will point to the key facts it teaches.</p>
-          </div>
-        </section>
+        {lesson?.format === 'read' ? (
+          <ReadLesson content={lesson.content} check={check} />
+        ) : lesson?.format === 'diagram' ? (
+          <DiagramLesson content={lesson.content} />
+        ) : (
+          <section className="ui-renderer" aria-label={`${formatInfo[format].label} lesson`}>
+            <div>
+              <FormatArt format={format} />
+              <h2 className="ui-h3" style={{ margin: '18px 0 10px' }}>{formatInfo[format].label.toUpperCase()} LESSON</h2>
+              <p>{formatInfo[format].description} The interactive version is being built next, on an illustrated data-hall scene.</p>
+            </div>
+          </section>
+        )}
         <aside className="ui-frame ui-frame--corner" aria-labelledby="facts-title">
           <h2 id="facts-title" className="ui-label" style={{ marginBottom: 14 }}>KEY FACTS IN THIS TOPIC</h2>
           <ul className="ui-facts">
             {topic.facts.map(fact => <li key={fact.key}><b>{fact.key.toUpperCase()}</b>{fact.text}</li>)}
           </ul>
           <p className="ui-mistake"><span>COMMON MISTAKE</span>{topic.commonMistake}</p>
-          <SkeletonNote>Lesson renderers and practice questions arrive with the content generator.</SkeletonNote>
+          <SkeletonNote>Sample lessons written by hand from the brief. The AI generator will produce the same shapes from approved briefs.</SkeletonNote>
         </aside>
       </div>
 
