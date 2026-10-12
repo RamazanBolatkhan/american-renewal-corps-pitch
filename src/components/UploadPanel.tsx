@@ -14,6 +14,7 @@ export function UploadPanel({ canUpload }: { canUpload: boolean }) {
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [dragging, setDragging] = useState(false);
 
   async function start() {
     if (!file) return;
@@ -34,15 +35,36 @@ export function UploadPanel({ canUpload }: { canUpload: boolean }) {
   }
 
   const busy = progress !== null;
+  const canDrop = canUpload && !busy;
+
+  function choose(next: File | null) {
+    setFile(next);
+    setError('');
+  }
+
+  // Dragging a file from Finder or Explorer onto the box works the same as choosing it.
+  const dropHandlers = {
+    onDragOver: (event: React.DragEvent) => {
+      if (!canDrop) return;
+      event.preventDefault();
+      setDragging(true);
+    },
+    onDragLeave: () => setDragging(false),
+    onDrop: (event: React.DragEvent) => {
+      event.preventDefault();
+      setDragging(false);
+      if (canDrop) choose(event.dataTransfer.files[0] ?? null);
+    },
+  };
   return (
     <div className="ui-stack">
-      <label className="ui-drop" htmlFor="plan-file">
+      <label className={`ui-drop${dragging ? ' ui-drop--active' : ''}`} htmlFor="plan-file" {...dropHandlers}>
         <Icon name="upload" />
-        <strong>{file ? file.name : 'CHOOSE A LEARNING PLAN'}</strong>
+        <strong>{dragging ? 'DROP TO ADD THIS FILE' : file ? file.name : 'CHOOSE OR DROP A LEARNING PLAN'}</strong>
         <span className="ui-small">
           {busy ? `Uploading… ${progress}%` : file ? `${Math.max(1, Math.round(file.size / 1024))} KB · ready to import` : 'PDF, Markdown, text or JSON · one module per file · up to 10 MB'}
         </span>
-        <input id="plan-file" type="file" accept={accept} disabled={!canUpload || busy} onChange={event => { setFile(event.target.files?.[0] ?? null); setError(''); }} />
+        <input id="plan-file" type="file" accept={accept} disabled={!canUpload || busy} onChange={event => choose(event.target.files?.[0] ?? null)} />
       </label>
       {error && <p className="ui-status ui-status--dark" role="alert">{error}</p>}
       <button className="ui-button ui-button--paper" type="button" disabled={!file || busy || !canUpload} onClick={start} style={{ justifySelf: 'start' }}>

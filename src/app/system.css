@@ -337,3 +337,4 @@ body{margin:0;background:var(--green)}
 @media(max-width:600px){.lesson-terms div{grid-template-columns:1fr;gap:2px}.lesson-read .lesson-para{grid-template-columns:1fr;gap:6px}}
 @media(prefers-reduced-motion:reduce){.diagram-el{transition:none}}
 .diagram-text{paint-order:stroke;stroke:#022a1c;stroke-width:4px;stroke-linejoin:round}
+.ui-drop--active{border-color:var(--orange);border-style:solid;background:#ff6b3512}
