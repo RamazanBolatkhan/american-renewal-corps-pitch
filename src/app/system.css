@@ -343,3 +343,33 @@ body{margin:0;background:var(--green)}
 .hall-control{display:inline-flex;gap:8px;align-items:center}
 .hall-control select{background:transparent;color:var(--paper);border:1px solid var(--frame);padding:5px 8px;font:13px var(--body)}
 .hall-control select option{color:#06402B}
+
+/* Game and sim */
+.game{display:grid;gap:14px}
+.game-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.game-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;align-items:center;border:1px solid var(--frame);background:#032f20a6;padding:12px 14px;transition:border-color .2s}
+.game-item:hover,.game-item:focus-within{border-color:#f3f2e980}
+.game-item.is-correct{border-color:#8fd3a8;background:#8fd3a814}
+.game-item.is-wrong{border-color:var(--orange);background:#ff6b3514}
+.game-item--order{grid-template-columns:28px minmax(0,1fr) auto}
+.game-step{font-family:var(--display);font-weight:800;font-size:22px;color:var(--orange)}
+.game-text{font-size:15px;line-height:1.5;color:var(--paper)}
+.game-groups{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.game-chip{background:transparent;color:var(--text-soft);border:1px solid var(--frame);padding:8px 10px;font:11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;min-height:36px}
+.game-chip:hover:not(:disabled){border-color:var(--paper);color:var(--paper)}
+.game-chip.is-on{background:var(--paper);color:var(--green);border-color:var(--paper)}
+.game-chip:disabled{opacity:.35;cursor:default}
+.game-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:4px}
+.game-result{margin-top:2px}
+.game-match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.game-pick{width:100%;text-align:left;background:transparent;color:var(--paper);border:0;font:15px/1.5 var(--body);cursor:pointer;padding:0}
+.game-pick.is-on{color:var(--orange)}
+.game-pick.is-used{color:var(--text-muted)}
+.game-pick:disabled{cursor:default}
+.sim-scenario{font-size:16px;line-height:1.7;color:var(--text-soft);border-left:3px solid var(--frame);padding-left:14px}
+.sim-progress{list-style:none;display:flex;gap:6px;padding:0;margin:0}
+.sim-progress li{width:28px;height:4px;background:var(--frame)}
+.sim-progress li.is-done{background:#8fd3a8}
+.sim-progress li.is-now{background:var(--orange)}
+@media(max-width:600px){.game-item{grid-template-columns:1fr}.game-groups{justify-content:flex-start}.game-match{grid-template-columns:1fr}.game-item--order{grid-template-columns:28px minmax(0,1fr)}.game-item--order .game-groups{grid-column:2}}
+@media(prefers-reduced-motion:reduce){.game-item{transition:none}}

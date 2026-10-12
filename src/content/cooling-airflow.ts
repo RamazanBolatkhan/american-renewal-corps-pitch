@@ -91,7 +91,7 @@ export const lessons: LessonInput[] = [
         { id: 'intake', text: 'Servers draw their cool air from here', facts: ['f1'] },
         { id: 'exhaust', text: 'Server exhaust is pushed into here', facts: ['f1'] },
         { id: 'return', text: 'Air from here travels back to the cooling units', facts: ['f3'] },
-        { id: 'reversed', text: 'A rack facing the wrong way blows hot air into here', facts: ['f4'] },
+        { id: 'reversed', text: 'A rack facing the wrong way blows hot air into here', facts: ['f4'], scene: { reversed: 1 } },
       ],
       answer: [
         { item: 'fronts', group: 'cold' },
@@ -125,6 +125,7 @@ export const lessons: LessonInput[] = [
           id: 'reversed',
           prompt: 'In one row, a rack’s back is facing the cold aisle. What is it doing?',
           facts: ['f4'],
+          scene: { reversed: 1 },
           choices: [
             { text: 'Blowing hot exhaust into the cold aisle', correct: true, feedback: 'Yes. A rack installed the wrong way pushes its exhaust where the other racks take in air.' },
             { text: 'Nothing unusual; racks can face either way', correct: false, feedback: 'Orientation matters. Facing the wrong way puts hot exhaust into the cold aisle.' },
@@ -136,7 +137,7 @@ export const lessons: LessonInput[] = [
           facts: ['f3'],
           choices: [
             { text: 'It is supposed to be hot. It carries exhaust back to the cooling units.', correct: true, feedback: 'Correct. A hot hot aisle is normal. The problem would be hot air reaching the cold aisle.' },
-            { text: 'Report it. The hot aisle should not be that hot.', correct: false, fromCommonMistake: true, feedback: 'This is the common mistake. The hot aisle is meant to be hot.' },
+            { text: 'Report it. The hot aisle should not be that hot.', correct: false, fromCommonMistake: true, feedback: 'The hot aisle is meant to be hot. The problem would be hot air reaching the cold aisle.' },
           ],
         },
       ],
@@ -224,11 +225,11 @@ export const lessons: LessonInput[] = [
       ],
       items: [
         { id: 'enclosed', text: 'Doors and roof panels enclose the aisle', facts: ['f1'] },
-        { id: 'open-door', text: 'A containment door is propped open', facts: ['f2'] },
+        { id: 'open-door', text: 'A containment door is propped open', facts: ['f2'], scene: { doorNear: 'open' } },
         { id: 'blanked', text: 'Empty rack spaces are covered with blanking panels', facts: ['f3'] },
-        { id: 'gap', text: 'An empty rack space has nothing covering it', facts: ['f3'] },
+        { id: 'gap', text: 'An empty rack space has nothing covering it', facts: ['f3'], scene: { missingBlank: 2 } },
         { id: 'tile-cold', text: 'Perforated tiles sit in the cold aisle', facts: ['f4'] },
-        { id: 'tile-hot', text: 'A perforated tile sits in the hot aisle', facts: ['f4'] },
+        { id: 'tile-hot', text: 'A perforated tile sits in the hot aisle', facts: ['f4'], scene: { tile: 'hot' } },
       ],
       answer: [
         { item: 'enclosed', group: 'keeps' },
@@ -255,24 +256,26 @@ export const lessons: LessonInput[] = [
           facts: ['f1', 'f2'],
           choices: [
             { text: 'Keep the doors closed and look for what is breaking containment', correct: true, feedback: 'Right. Opening the doors lets hot and cold air mix, which makes rack inlets hotter.' },
-            { text: 'Open the doors to let the heat escape', correct: false, fromCommonMistake: true, feedback: 'This is the common mistake. Open doors let hot exhaust into the cold aisle.' },
+            { text: 'Open the doors to let the heat escape', correct: false, fromCommonMistake: true, feedback: 'Open doors let hot exhaust into the cold aisle. Watch the inlet readings climb.', scene: { doorFar: 'open', doorNear: 'open' } },
           ],
         },
         {
           id: 'propped-door',
-          prompt: 'At the far end you find a door propped open. Why does it matter?',
+          prompt: 'At the near end you find a door propped open. Why does it matter?',
           facts: ['f2'],
+          scene: { doorNear: 'open' },
           choices: [
-            { text: 'Hot exhaust can leak into the cold aisle', correct: true, feedback: 'Yes. Close it or report it.' },
+            { text: 'Hot exhaust can leak into the cold aisle', correct: true, feedback: 'Yes. Close it or report it. Closed, the readings come back down.', scene: { doorNear: 'closed' } },
             { text: 'It doesn’t; the roof panels still keep the air apart', correct: false, feedback: 'Containment needs both the doors and the roof panels to keep the air apart.' },
           ],
         },
         {
           id: 'gap',
-          prompt: 'One rack has an empty space with nothing covering it. What should be there?',
+          prompt: 'Rack A2 has an empty space with nothing covering it. What should be there?',
           facts: ['f3'],
+          scene: { missingBlank: 1 },
           choices: [
-            { text: 'A blanking panel, so exhaust can’t flow back to the front', correct: true, feedback: 'Correct. Blanking panels close the gap.' },
+            { text: 'A blanking panel, so exhaust can’t flow back to the front', correct: true, feedback: 'Correct. Blanking panels close the gap.', scene: { missingBlank: null } },
             { text: 'Nothing; an open space helps the rack breathe', correct: false, feedback: 'An open space lets exhaust flow back to the rack front.' },
           ],
         },
@@ -280,8 +283,9 @@ export const lessons: LessonInput[] = [
           id: 'tile',
           prompt: 'You spot a perforated floor tile in the hot aisle. Is it in the right place?',
           facts: ['f4'],
+          scene: { tile: 'hot' },
           choices: [
-            { text: 'No. Perforated tiles belong in the cold aisle, feeding the rack fronts.', correct: true, feedback: 'Right. Correct or report a misplaced tile.' },
+            { text: 'No. Perforated tiles belong in the cold aisle, feeding the rack fronts.', correct: true, feedback: 'Right. Correct or report a misplaced tile.', scene: { tile: 'cold' } },
             { text: 'Yes. Cold air in the hot aisle cools the exhaust.', correct: false, feedback: 'Perforated tiles belong in the cold aisle, where they deliver cold air to the rack fronts.' },
           ],
         },
@@ -384,15 +388,17 @@ export const lessons: LessonInput[] = [
       decisions: [
         {
           id: 'done',
+          scene: { missingBlank: 2 },
           prompt: 'The alarm has cleared. Can you report that the racks are fine?',
           facts: ['f4'],
           choices: [
             { text: 'Not yet. Confirm with the readings first.', correct: true, feedback: 'Right. A cleared alarm does not prove every rack is back in range.' },
-            { text: 'Yes. The alarm clearing means everything is in range.', correct: false, fromCommonMistake: true, feedback: 'This is the common mistake. Check the readings.' },
+            { text: 'Yes. The alarm clearing means everything is in range.', correct: false, fromCommonMistake: true, feedback: 'A cleared alarm doesn’t prove every rack is back in range. Check the readings.' },
           ],
         },
         {
           id: 'which-reading',
+          scene: { missingBlank: 2 },
           prompt: 'Which temperature do you check?',
           facts: ['f1'],
           choices: [
@@ -402,6 +408,7 @@ export const lessons: LessonInput[] = [
         },
         {
           id: 'where',
+          scene: { missingBlank: 2 },
           prompt: 'Which racks do you check?',
           facts: ['f3'],
           choices: [
@@ -411,10 +418,11 @@ export const lessons: LessonInput[] = [
         },
         {
           id: 'reading',
-          prompt: 'One rack inlet reads 29°C (an example reading). Is it in range?',
+          scene: { missingBlank: 2 },
+          prompt: 'Rack A3’s inlet sensor reads 28.0°C (an example reading). Is it in range?',
           facts: ['f2'],
           choices: [
-            { text: 'No. The recommended range is 18 to 27°C.', correct: true, feedback: 'Right. 29°C is above the recommended range. Report it.' },
+            { text: 'No. The recommended range is 18 to 27°C.', correct: true, feedback: 'Right. 28.0°C is above the recommended range. Report it.' },
             { text: 'Yes. Anything under 30°C is fine.', correct: false, feedback: 'The recommended inlet range for most IT equipment is 18 to 27°C (64.4 to 80.6°F).' },
           ],
         },
@@ -476,7 +484,7 @@ export const questions: QuestionInput[] = [
     prompt: 'Inlet temperatures are rising. Should you open the containment doors to let heat out?',
     options: [
       { text: 'No. An open door lets hot exhaust leak into the cold aisle.', correct: true, explanation: 'Opening doors makes rack inlets hotter.' },
-      { text: 'Yes. It lets the heat escape.', correct: false, fromCommonMistake: true, explanation: 'This is the common mistake: it mixes hot and cold air.' },
+      { text: 'Yes. It lets the heat escape.', correct: false, fromCommonMistake: true, explanation: 'Opening the doors mixes hot and cold air, which makes rack inlets hotter.' },
     ],
   },
   {
@@ -529,7 +537,7 @@ export const questions: QuestionInput[] = [
     prompt: 'The temperature alarm has cleared. What next?',
     options: [
       { text: 'Confirm every rack is in range with the readings', correct: true, explanation: 'A cleared alarm does not prove every rack is back in range.' },
-      { text: 'Close the issue; the alarm cleared', correct: false, fromCommonMistake: true, explanation: 'This is the common mistake.' },
+      { text: 'Close the issue; the alarm cleared', correct: false, fromCommonMistake: true, explanation: 'A cleared alarm does not prove every rack is back in range.' },
     ],
   },
 ];

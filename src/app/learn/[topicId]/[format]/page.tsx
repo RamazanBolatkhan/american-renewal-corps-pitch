@@ -4,7 +4,12 @@ import { notFound } from 'next/navigation';
 import { Eyebrow, SkeletonNote } from '@/components/PageShell';
 import { DemoBanner, LearnShell } from '@/components/LearnShell';
 import { FormatArt } from '@/components/FormatArt';
+import '@/components/iso/iso.css';
+import '@/components/figures/hall/hall.css';
+import { HallArt } from '@/components/figures/hall/art';
 import { DiagramLesson } from '@/components/lessons/DiagramLesson';
+import { GameLesson } from '@/components/lessons/GameLesson';
+import { SimLesson } from '@/components/lessons/SimLesson';
 import { ReadLesson } from '@/components/lessons/ReadLesson';
 import { getSampleLesson, getSampleQuestions } from '@/lib/content/sample';
 import { Icon } from '@/components/Icon';
@@ -60,6 +65,10 @@ export default async function LessonPage({ params }: Props) {
           <ReadLesson content={lesson.content} check={check} />
         ) : lesson?.format === 'diagram' ? (
           <DiagramLesson content={lesson.content} />
+        ) : lesson?.format === 'game' ? (
+          <GameLesson content={lesson.content} art={<HallArt key="art" />} />
+        ) : lesson?.format === 'sim' ? (
+          <SimLesson content={lesson.content} art={<HallArt key="art" />} />
         ) : (
           <section className="ui-renderer" aria-label={`${formatInfo[format].label} lesson`}>
             <div>

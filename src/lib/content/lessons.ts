@@ -46,9 +46,23 @@ export const DiagramContent = z.object({
   captions: z.array(z.object({ text: z.string().min(1), facts: Facts, elements: z.array(Id).default([]) })).min(1),
 });
 
+/* ---------- Scene states: what the data-hall scene shows for an item, decision or choice ---------- */
+
+const RackIndex = z.number().int().min(0).max(3).nullable();
+export const SceneState = z
+  .object({
+    doorFar: z.enum(['closed', 'open']),
+    doorNear: z.enum(['closed', 'open']),
+    reversed: RackIndex,
+    missingBlank: RackIndex,
+    tile: z.enum(['cold', 'hot']),
+  })
+  .partial();
+export type SceneState = z.infer<typeof SceneState>;
+
 /* ---------- Game: match pairs, put in order, or sort into groups ---------- */
 
-const GameItem = z.object({ id: Id, text: z.string().min(1), facts: Facts });
+const GameItem = z.object({ id: Id, text: z.string().min(1), facts: Facts, scene: SceneState.optional() });
 
 export const GameContent = z.discriminatedUnion('kind', [
   z.object({
@@ -82,12 +96,16 @@ export const Choice = z.object({
   correct: z.boolean(),
   feedback: z.string().min(1),
   fromCommonMistake: z.boolean().default(false),
+  /** What the scene shows after this choice, layered over the decision's scene. */
+  scene: SceneState.optional(),
 });
 
 export const SimContent = z.object({
   title: z.string().min(3),
   scenario: z.string().min(1),
-  decisions: z.array(z.object({ id: Id, prompt: z.string().min(1), facts: Facts, choices: z.array(Choice).min(2) })).min(1),
+  decisions: z
+    .array(z.object({ id: Id, prompt: z.string().min(1), facts: Facts, scene: SceneState.optional(), choices: z.array(Choice).min(2) }))
+    .min(1),
 });
 
 /* ---------- Lesson: shared fields plus format-specific content ---------- */
