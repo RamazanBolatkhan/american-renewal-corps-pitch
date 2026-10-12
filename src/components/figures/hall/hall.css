@@ -25,3 +25,13 @@
 }
 .iso.hall .iso-swatch[data-mark="blue"] path{stroke:var(--anatomy-blue)}
 .iso.hall .iso-swatch[data-mark="red"] path{stroke:var(--anatomy-red)}
+/* Direct interaction: every described part highlights on hover or focus; changeable ones look clickable. */
+.hall-hit{fill:transparent;stroke:none;pointer-events:all}
+.hall-explain [data-part],.hall-interactive [data-part]{cursor:help;outline:none}
+.hall-interactive [data-part][data-changeable]{cursor:pointer}
+.hall-explain [data-part]:hover .iso-edge,.hall-interactive [data-part]:hover .iso-edge,
+.hall-explain [data-part]:focus-visible .iso-edge,.hall-interactive [data-part]:focus-visible .iso-edge{stroke:var(--anatomy-hi);stroke-width:1.4}
+.hall-interactive [data-part][data-changeable]:hover .iso-edge,.hall-interactive [data-part][data-changeable]:focus-visible .iso-edge{stroke:var(--anatomy-lit)}
+.hall-interactive [data-part]:hover .iso-line[data-tone="lo"],.hall-interactive [data-part]:focus-visible .iso-line[data-tone="lo"]{stroke:var(--anatomy-mid)}
+.hall-interactive [data-part]:focus-visible .hall-hit{stroke:var(--anatomy-lit);stroke-width:1.2}
+.hall-note{min-height:1.6em;margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--anatomy-text)}

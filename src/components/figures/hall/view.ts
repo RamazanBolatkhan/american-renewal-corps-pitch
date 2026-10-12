@@ -34,8 +34,9 @@ export const CRAH: Plan = { x: -54, y: -98, w: 40, d: 30, r: 1 };
 export const CRAH_H = 96;
 
 /** Movable perforated tile: home in the cold aisle, or misplaced in the near hot aisle. */
-export const TILE_HOME: Plan = { x: ROW_X + 3 * TILE, y: 0, w: TILE, d: TILE, r: 0.6 };
-export const TILE_HOT: Plan = { x: ROW_X + 3 * TILE, y: ROW_B.y + RACK_D, w: TILE, d: TILE, r: 0.6 };
+// Home is a clear spot in the middle of the aisle, away from the near door so it is easy to click.
+export const TILE_HOME: Plan = { x: ROW_X + TILE, y: AISLE.y0, w: TILE, d: TILE, r: 0.6 };
+export const TILE_HOT: Plan = { x: ROW_X + 2 * TILE, y: ROW_B.y + RACK_D, w: TILE, d: TILE, r: 0.6 };
 
 const extremes: Point3[] = [
   [FLOOR.x, FLOOR.y, -PLENUM - 2],
