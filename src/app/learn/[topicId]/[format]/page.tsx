@@ -69,7 +69,7 @@ export default async function LessonPage({ params }: Props) {
         ) : lesson?.format === 'diagram' ? (
           <DiagramLesson content={lesson.content} />
         ) : lesson?.format === 'game' ? (
-          <GameLesson content={lesson.content} art={gameScene ? <HallArt key="art" /> : undefined} />
+          <GameLesson content={lesson.content} art={gameScene ? <HallArt key="art" /> : undefined} facts={topic.facts} />
         ) : lesson?.format === 'sim' ? (
           <SimLesson content={lesson.content} art={simScene ? <HallArt key="art" /> : undefined} />
         ) : (
@@ -84,7 +84,7 @@ export default async function LessonPage({ params }: Props) {
         <aside className="ui-frame ui-frame--corner" aria-labelledby="facts-title">
           <h2 id="facts-title" className="ui-label" style={{ marginBottom: 14 }}>KEY FACTS IN THIS TOPIC</h2>
           <ul className="ui-facts">
-            {topic.facts.map(fact => <li key={fact.key}><b>{fact.key.toUpperCase()}</b>{fact.text}</li>)}
+            {topic.facts.map(fact => <li key={fact.key} data-fact={fact.key}><b>{fact.key.toUpperCase()}</b>{fact.text}</li>)}
           </ul>
           <p className="ui-mistake"><span>COMMON MISTAKE</span>{topic.commonMistake}</p>
           <SkeletonNote>

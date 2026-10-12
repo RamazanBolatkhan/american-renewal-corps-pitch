@@ -373,3 +373,18 @@ body{margin:0;background:var(--green)}
 .sim-progress li.is-now{background:var(--orange)}
 @media(max-width:600px){.game-item{grid-template-columns:1fr}.game-groups{justify-content:flex-start}.game-match{grid-template-columns:1fr}.game-item--order{grid-template-columns:28px minmax(0,1fr)}.game-item--order .game-groups{grid-column:2}}
 @media(prefers-reduced-motion:reduce){.game-item{transition:none}}
+
+/* Facts linked to the scene */
+.ui-facts li{transition:background .25s,box-shadow .25s;padding:4px 6px;margin:-4px -6px}
+.ui-facts li[data-fact-state="related"]{background:#f3f2e90f;box-shadow:inset 2px 0 0 var(--text-soft)}
+.ui-facts li[data-fact-state="broken"]{background:#ff6b351c;box-shadow:inset 3px 0 0 var(--orange)}
+.ui-facts li[data-fact-state="broken"]::after{content:'BROKEN NOW';grid-column:2;font-size:9px;letter-spacing:.14em;color:var(--orange);margin-top:2px}
+.scene-status{border:1px solid var(--frame);padding:14px 16px;display:grid;gap:8px}
+.scene-status.is-broken{border-color:#ff6b3580;background:#ff6b350f}
+.scene-status.is-ok{border-color:#8fd3a855}
+.scene-status ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.scene-status p,.scene-status li{font-size:14px;line-height:1.6;color:var(--text-soft)}
+.scene-status-what{display:block;color:var(--paper)}
+.scene-status-fact{display:block;color:var(--text-soft)}
+.scene-status-fact .lesson-chips{margin:0 4px;vertical-align:1px}
+@media(prefers-reduced-motion:reduce){.ui-facts li{transition:none}}

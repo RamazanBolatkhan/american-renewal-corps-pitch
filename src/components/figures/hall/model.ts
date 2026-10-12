@@ -124,3 +124,37 @@ export function toggled(part: string, state: HallState): HallState | null {
   if (part === 'tile-movable') return { ...state, tile: state.tile === 'hot' ? 'cold' : 'hot' };
   return null;
 }
+
+/* ---------- Linking scene problems to the brief's facts ---------- */
+
+/** Kinds of problem the scene can show. Both doors count as one kind: an open containment door. */
+export type FaultKind = 'door' | 'reversed' | 'missingBlank' | 'tile';
+
+export function faultKinds(state: Partial<HallState>): FaultKind[] {
+  const kinds: FaultKind[] = [];
+  if (state.doorFar === 'open' || state.doorNear === 'open') kinds.push('door');
+  if (state.reversed !== undefined && state.reversed !== null) kinds.push('reversed');
+  if (state.missingBlank !== undefined && state.missingBlank !== null) kinds.push('missingBlank');
+  if (state.tile === 'hot') kinds.push('tile');
+  return kinds;
+}
+
+/** Which kind of problem a part can cause, for highlighting facts on hover. */
+export function partKind(part: string): FaultKind | null {
+  if (part.startsWith('door-')) return 'door';
+  if (/^rack-a\d$/.test(part)) return 'reversed';
+  if (part.startsWith('blank-')) return 'missingBlank';
+  if (part === 'tile-movable' || part === 'perf-tile') return 'tile';
+  return null;
+}
+
+/** What is wrong, in plain words, for the current state. */
+export function faultSentence(kind: FaultKind, state: HallState): string {
+  if (kind === 'door') {
+    const ends = [state.doorFar === 'open' && 'far', state.doorNear === 'open' && 'near'].filter(Boolean);
+    return `The ${ends.join(' and ')} containment door${ends.length > 1 ? 's are' : ' is'} open.`;
+  }
+  if (kind === 'reversed') return `Rack A${(state.reversed ?? 0) + 1} faces the wrong way.`;
+  if (kind === 'missingBlank') return `Rack A${(state.missingBlank ?? 0) + 1} has an empty space with no blanking panel.`;
+  return 'A perforated floor tile sits in the hot aisle.';
+}

@@ -5,6 +5,7 @@ import { HallScene } from '@/components/figures/hall/live';
 import { healthyHall, type HallState } from '@/components/figures/hall/model';
 import type { SceneState, SimContent } from '@/lib/content/lessons';
 import { FactChips } from './FactChips';
+import { useFactMarks } from './factMarks';
 
 const sceneOf = (...layers: (SceneState | undefined)[]): HallState => Object.assign({ ...healthyHall }, ...layers.filter(Boolean));
 
@@ -20,6 +21,8 @@ export function SimLesson({ content, art }: { content: SimContent; art?: React.R
   const decision = content.decisions[Math.min(step, content.decisions.length - 1)];
   const choice = picked === null ? null : decision.choices[picked];
   const state = finished ? sceneOf() : sceneOf(decision.scene, choice?.scene);
+  // Highlight the current decision's facts; a wrong choice marks them as broken.
+  useFactMarks(!finished && choice && !choice.correct ? decision.facts : [], finished ? [] : decision.facts);
 
   const pick = (i: number) => {
     if (picked !== null) return;

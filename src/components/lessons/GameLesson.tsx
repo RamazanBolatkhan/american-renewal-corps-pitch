@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import { HallScene } from '@/components/figures/hall/live';
-import { healthyHall, type HallState } from '@/components/figures/hall/model';
+import { faultKinds, faultSentence, healthyHall, partKind, type FaultKind, type HallState } from '@/components/figures/hall/model';
 import type { GameContent, SceneState } from '@/lib/content/lessons';
 import { FactChips } from './FactChips';
+import { useFactMarks } from './factMarks';
 
 type Item = GameContent['items'][number];
 
@@ -32,13 +33,22 @@ const sceneOf = (scene?: SceneState): HallState => ({ ...healthyHall, ...scene }
  * Plays a match, order or sort game from lesson data. When items carry a scene state, the data
  * hall shows what the selected item looks like.
  */
-export function GameLesson({ content, art }: { content: GameContent; art?: React.ReactNode }) {
+export function GameLesson({ content, art, facts: briefFacts = [] }: { content: GameContent; art?: React.ReactNode; facts?: { key: string; text: string }[] }) {
   const [active, setActive] = React.useState<Item | null>(null);
   // The student's own changes to the scene; hovering a statement previews it instead.
   const [own, setOwn] = React.useState<HallState>(healthyHall);
+  const [pointed, setPointed] = React.useState<string | null>(null);
   const [checked, setChecked] = React.useState(false);
-  const usesScene = art && content.items.some(i => i.scene);
+  const usesScene = Boolean(art && content.items.some(i => i.scene));
   const facts = [...new Set(content.items.flatMap(i => i.facts))].sort();
+  const shown = active ? sceneOf(active.scene) : own;
+
+  // Which facts each kind of problem breaks, read from the game items that show it on the scene.
+  const factsFor = (kind: FaultKind) => [...new Set(content.items.filter(i => i.scene && faultKinds(i.scene).includes(kind)).flatMap(i => i.facts))].sort();
+  const problems = usesScene ? faultKinds(shown).map(kind => ({ kind, sentence: faultSentence(kind, shown), facts: factsFor(kind) })) : [];
+  const pointedKind = pointed ? partKind(pointed) : null;
+  useFactMarks(problems.flatMap(p => p.facts), [...(pointedKind ? factsFor(pointedKind) : []), ...(active?.facts ?? [])]);
+  const textOf = (key: string) => briefFacts.find(f => f.key === key)?.text;
 
   return (
     <article className="lesson lesson-game">
@@ -46,12 +56,36 @@ export function GameLesson({ content, art }: { content: GameContent; art?: React
       {usesScene && (
         <HallScene
           art={art}
-          state={active ? sceneOf(active.scene) : own}
+          state={shown}
           onChange={next => { setActive(null); setOwn(next); }}
+          onHover={setPointed}
           fig="Game"
           title={active ? 'What it looks like' : 'Try it: change the hall'}
           caption="Hover a statement to see it, or click doors, racks, blanking panels and the loose tile to try things yourself. Example readings."
         />
+      )}
+      {usesScene && (
+        <section className={`scene-status ${problems.length ? 'is-broken' : 'is-ok'}`} aria-live="polite" aria-labelledby="scene-status-title">
+          <h3 id="scene-status-title" className="ui-label">{active ? 'THIS STATEMENT ON THE SCENE' : problems.length ? 'WHAT’S WRONG NOW' : 'EVERYTHING IS IN PLACE'}</h3>
+          {problems.length === 0 ? (
+            <p>Doors closed, racks facing the right way, gaps covered, tiles in the cold aisle. Click a part to break something and see which fact it goes against.</p>
+          ) : (
+            <ul>
+              {problems.map(p => (
+                <li key={p.kind}>
+                  <span className="scene-status-what">{p.sentence}</span>
+                  {p.facts.length ? (
+                    <span className="scene-status-fact">
+                      Goes against <FactChips facts={p.facts} />{p.facts.length === 1 && textOf(p.facts[0]) ? <> “{textOf(p.facts[0])}”</> : null}
+                    </span>
+                  ) : (
+                    <span className="scene-status-fact">This belongs to another topic in the module.</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
       <div onMouseLeave={() => setActive(null)} onBlur={() => setActive(null)}>
       {content.kind === 'sort' && <SortGame content={content} onActive={setActive} checked={checked} setChecked={setChecked} />}

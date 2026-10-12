@@ -27,10 +27,12 @@ type Props = {
   onPart?: (part: string) => void;
   /** Lets the student change the scene directly: click or press Enter on a door, rack, panel or tile. */
   onChange?: (next: HallState) => void;
+  /** Called with the part under the pointer or keyboard focus (null when none). */
+  onHover?: (part: string | null) => void;
 };
 
 /** The data-hall figure. Static art comes in from the server; this only shows, hides and moves. */
-export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold aisle', hint = 'Example readings', caption, onPart, onChange }: Props) {
+export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold aisle', hint = 'Example readings', caption, onPart, onChange, onHover }: Props) {
   const interactive = Boolean(onChange);
   const defaultHint = interactive ? 'Hover a part · click to change it' : hint;
   const root = React.useRef<SVGGElement>(null);
@@ -72,7 +74,8 @@ export function HallScene({ art, state, fig = 'Fig 1', title = 'Contained cold a
     showHint(info ? `${info.name}${info.action && interactive ? ` · ${info.action}` : ''}` : defaultHint);
     const note = anchor.current?.querySelector('.hall-note');
     if (note) note.textContent = info ? `${info.name}: ${info.does}` : '';
-  }, [state, interactive, defaultHint, showHint, anchor]);
+    onHover?.(info ? part : null);
+  }, [state, interactive, defaultHint, showHint, anchor, onHover]);
   const hovered = React.useRef<string | null>(null);
 
   React.useEffect(() => {
