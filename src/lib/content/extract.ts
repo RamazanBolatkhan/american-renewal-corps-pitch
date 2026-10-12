@@ -8,7 +8,7 @@ import { importJob } from '@/db/schema';
 import { checkAgainstSource, ExtractedPlan } from './plan';
 
 /** AI Gateway model id. Override with the EXTRACTION_MODEL environment setting. */
-export const EXTRACTION_MODEL = process.env.EXTRACTION_MODEL || 'anthropic/claude-sonnet-5.5';
+export const EXTRACTION_MODEL = process.env.EXTRACTION_MODEL || 'anthropic/claude-haiku-5.5';
 const MAX_SOURCE_CHARS = 120_000;
 
 const instructions = `You turn a training plan into structured content briefs for ARC (American Renewal Corps).

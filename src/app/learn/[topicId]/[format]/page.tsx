@@ -11,9 +11,9 @@ import { DiagramLesson } from '@/components/lessons/DiagramLesson';
 import { GameLesson } from '@/components/lessons/GameLesson';
 import { SimLesson } from '@/components/lessons/SimLesson';
 import { ReadLesson } from '@/components/lessons/ReadLesson';
-import { getSampleLesson, getSampleQuestions } from '@/lib/content/sample';
 import { Icon } from '@/components/Icon';
-import { coolingModule, formatInfo, formats, getTopic, isFormat } from '@/lib/module';
+import { findTopic, getLesson, getQuestions } from '@/lib/content/catalog';
+import { formatInfo, formats, isFormat } from '@/lib/module';
 import { buildPlan } from '@/lib/plan';
 import { getLearningStyle, getSession } from '@/lib/session';
 
@@ -22,33 +22,36 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { topicId } = await params;
-  const topic = getTopic(topicId);
-  return { title: `${topic?.title ?? 'Lesson'} — American Renewal Corps` };
+  const found = await findTopic(decodeURIComponent((await params).topicId));
+  return { title: `${found?.topic.title ?? 'Lesson'} — American Renewal Corps` };
 }
 
 export default async function LessonPage({ params }: Props) {
-  const { topicId, format } = await params;
-  const topic = getTopic(topicId);
-  if (!topic || !isFormat(format)) notFound();
+  const { topicId: rawId, format } = await params;
+  const found = await findTopic(decodeURIComponent(rawId));
+  if (!found || !isFormat(format)) notFound();
+  const { module, topic, index } = found;
 
   const session = await getSession();
   // Visitors who haven't chosen a style can still open a lesson; the viewed format stands in.
   const style = (session && (await getLearningStyle(session.user.id))) || format;
-  const planItem = buildPlan(style, coolingModule.topics.map(t => t.id)).topics.find(t => t.topic_id === topic.id)!;
-  const topicIndex = coolingModule.topics.indexOf(topic);
-  const next = coolingModule.topics[topicIndex + 1];
+  const planItem = buildPlan(style, module.topics.map(t => t.id)).topics.find(t => t.topic_id === topic.id)!;
+  const next = module.topics[index + 1];
   const nextPrimary = next ? buildPlan(style, [next.id]).topics[0].primary : undefined;
-  const lesson = getSampleLesson(topic.id, format);
+  const [lesson, questions] = await Promise.all([getLesson(topic, format), getQuestions(topic)]);
   // The Read lesson ends with a check on the fact its common mistake is about.
-  const check = getSampleQuestions(topic.id).find(q => q.options.some(o => o.fromCommonMistake)) ?? getSampleQuestions(topic.id)[0];
+  const check = questions.find(q => q.options.some(o => o.fromCommonMistake)) ?? questions[0];
   const role = (f: string) => (f === planItem.primary ? 'START' : f === planItem.secondary ? 'THEN' : 'ALSO');
+  // The data-hall scene is only shown when the lesson's data uses it.
+  const gameScene = lesson?.format === 'game' && lesson.content.items.some(i => i.scene);
+  const simScene = lesson?.format === 'sim' && lesson.content.decisions.some(d => d.scene || d.choices.some(c => c.scene));
+  const planHref = `/learn?module=${module.id}`;
 
   return (
     <LearnShell>
       <DemoBanner />
-      <Link className="ui-crumb" href={`/learn`}><Icon name="back" /> COOLING &amp; AIRFLOW / YOUR PLAN</Link>
-      <Eyebrow>TOPIC 0{topicIndex + 1} / {formatInfo[format].label.toUpperCase()}</Eyebrow>
+      <Link className="ui-crumb" href={planHref}><Icon name="back" /> {module.title.toUpperCase()} / YOUR PLAN</Link>
+      <Eyebrow>TOPIC {String(index + 1).padStart(2, '0')} / {formatInfo[format].label.toUpperCase()}</Eyebrow>
       <h1 className="ui-title" style={{ fontSize: 'clamp(40px,5vw,80px)' }}>{topic.title.toUpperCase()}</h1>
       <p className="ui-lede">{topic.objective}</p>
 
@@ -66,15 +69,15 @@ export default async function LessonPage({ params }: Props) {
         ) : lesson?.format === 'diagram' ? (
           <DiagramLesson content={lesson.content} />
         ) : lesson?.format === 'game' ? (
-          <GameLesson content={lesson.content} art={<HallArt key="art" />} />
+          <GameLesson content={lesson.content} art={gameScene ? <HallArt key="art" /> : undefined} />
         ) : lesson?.format === 'sim' ? (
-          <SimLesson content={lesson.content} art={<HallArt key="art" />} />
+          <SimLesson content={lesson.content} art={simScene ? <HallArt key="art" /> : undefined} />
         ) : (
           <section className="ui-renderer" aria-label={`${formatInfo[format].label} lesson`}>
             <div>
               <FormatArt format={format} />
               <h2 className="ui-h3" style={{ margin: '18px 0 10px' }}>{formatInfo[format].label.toUpperCase()} LESSON</h2>
-              <p>{formatInfo[format].description} The interactive version is being built next, on an illustrated data-hall scene.</p>
+              <p>This lesson hasn’t been generated yet. Try another format, or check back after the content team finishes this module.</p>
             </div>
           </section>
         )}
@@ -84,12 +87,16 @@ export default async function LessonPage({ params }: Props) {
             {topic.facts.map(fact => <li key={fact.key}><b>{fact.key.toUpperCase()}</b>{fact.text}</li>)}
           </ul>
           <p className="ui-mistake"><span>COMMON MISTAKE</span>{topic.commonMistake}</p>
-          <SkeletonNote>Sample lessons written by hand from the brief. The AI generator will produce the same shapes from approved briefs.</SkeletonNote>
+          <SkeletonNote>
+            {module.source === 'generated'
+              ? 'Generated by AI from the approved brief and checked automatically for fact coverage, length and working answers.'
+              : 'Sample lessons written by hand from the brief, in the same shapes the AI generator produces.'}
+          </SkeletonNote>
         </aside>
       </div>
 
       <div className="ui-pager">
-        <Link className="ui-button ui-button--outline" href={`/learn`}><Icon name="back" /> BACK TO PLAN</Link>
+        <Link className="ui-button ui-button--outline" href={planHref}><Icon name="back" /> BACK TO PLAN</Link>
         {next && nextPrimary && (
           <Link className="ui-button ui-button--paper" href={`/learn/${next.id}/${nextPrimary}`}>NEXT: {next.title.toUpperCase()} <Icon name="arrow" /></Link>
         )}

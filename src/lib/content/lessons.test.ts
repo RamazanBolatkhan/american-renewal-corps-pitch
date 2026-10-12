@@ -80,6 +80,19 @@ describe('checks catch broken lessons', () => {
     expect(checkLesson(diagram, keys).join(' ')).toContain('outside the canvas');
   });
 
+  it('flags colliding labels and an unconnected arrow in a diagram', () => {
+    // The containment diagram (720 wide) has open floor at its bottom right for a stray arrow.
+    const diagram = structuredClone(lessons.find(l => l.id === 'topic-containment.diagram')!) as Extract<(typeof lessons)[number], { format: 'diagram' }>;
+    diagram.content.elements.push(
+      { id: 'note-a', type: 'label', x: 200, y: 20, label: 'A note that collides', facts: ['f1'] },
+      { id: 'note-b', type: 'label', x: 210, y: 22, label: 'Another note', facts: ['f1'] },
+      { id: 'stray', type: 'arrow', x: 640, y: 335, x2: 700, y2: 335, facts: ['f1'] },
+    );
+    const problems = checkLesson(diagram, factKeys('topic-containment')).join(' ');
+    expect(problems).toContain('collide');
+    expect(problems).toContain("doesn't start or end on any part");
+  });
+
   it('flags a question with no correct option', () => {
     const q = structuredClone(questions[0]);
     q.options.forEach(o => (o.correct = false));

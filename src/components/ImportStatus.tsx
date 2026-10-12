@@ -4,6 +4,9 @@ const labels: Record<ImportStatus, string> = {
   extracting: 'READING PLAN',
   needs_review: 'NEEDS REVIEW',
   approved: 'APPROVED',
+  generating: 'GENERATING LESSONS',
+  published: 'PUBLISHED',
+  partial: 'PARTLY GENERATED',
   failed: 'FAILED',
 };
 

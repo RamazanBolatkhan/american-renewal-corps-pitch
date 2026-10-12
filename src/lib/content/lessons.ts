@@ -208,6 +208,72 @@ function gameProblems(game: GameContent): string[] {
   return problems;
 }
 
+/* ---------- Diagram layout: label boxes estimated the way DiagramLesson places them ---------- */
+
+type Box = { x: number; y: number; w: number; h: number; owner: string };
+const overlaps = (a: Box, b: Box, pad = 0) => a.x < b.x + b.w - pad && b.x < a.x + a.w - pad && a.y < b.y + b.h - pad && b.y < a.y + a.h - pad;
+
+function labelBox(e: DiagramContent['elements'][number], width: number): Box | null {
+  if (!e.label) return null;
+  const n = e.label.length;
+  if (e.type === 'zone') return { x: e.x + 10, y: e.y + (e.h ?? 0) - 20, w: n * 7.6, h: 12, owner: e.id };
+  if (e.type === 'label') return { x: e.x, y: e.y - 7, w: n * 6.4, h: 14, owner: e.id };
+  if (e.type === 'rect') {
+    const w = e.w ?? 0;
+    const h = e.h ?? 0;
+    const tw = n * 6.4;
+    const at = e.labelAt ?? (w < 30 ? (e.x < width / 2 ? 'left' : 'right') : tw <= w - 6 ? 'inside' : 'above');
+    if (at === 'inside') return null; // fits inside its own box
+    if (at === 'above') return { x: e.x + w / 2 - tw / 2, y: e.y - 15, w: tw, h: 14, owner: e.id };
+    if (at === 'below') return { x: e.x + w / 2 - tw / 2, y: e.y + h + 7, w: tw, h: 14, owner: e.id };
+    if (at === 'left') return { x: e.x - 6 - tw, y: e.y + h / 2 - 7, w: tw, h: 14, owner: e.id };
+    return { x: e.x + w + 6, y: e.y + h / 2 - 7, w: tw, h: 14, owner: e.id };
+  }
+  const x2 = e.x2 ?? e.x;
+  const y2 = e.y2 ?? e.y;
+  const vertical = Math.abs(y2 - e.y) > Math.abs(x2 - e.x);
+  const at = e.labelAt === 'start' ? [e.x, e.y] : e.labelAt === 'end' ? [x2, y2] : [(e.x + x2) / 2, (e.y + y2) / 2];
+  const tw = n * 6;
+  if (!vertical) return { x: at[0] - tw / 2, y: at[1] - 16, w: tw, h: 13, owner: e.id };
+  const left = e.x > width * 0.6;
+  return { x: left ? at[0] - 8 - tw : at[0] + 8, y: at[1] - 6.5, w: tw, h: 13, owner: e.id };
+}
+
+/** Layout rules a generated diagram must meet so it reads cleanly: no collisions, arrows that connect, a filled canvas. */
+export function diagramLayoutProblems(content: DiagramContent): string[] {
+  const problems: string[] = [];
+  const { elements, width, height } = content;
+  const rects = elements.filter(e => e.type === 'rect').map(e => ({ x: e.x, y: e.y, w: e.w ?? 0, h: e.h ?? 0, owner: e.id }));
+  const areas = elements.filter(e => e.type === 'rect' || e.type === 'zone').map(e => ({ x: e.x, y: e.y, w: e.w ?? 0, h: e.h ?? 0, owner: e.id }));
+  // A part drawn fully inside another (a panel inside a rack row) is fine; a partial overlap is not.
+  const inside = (a: Box, b: Box) => a.x >= b.x - 0.5 && a.y >= b.y - 0.5 && a.x + a.w <= b.x + b.w + 0.5 && a.y + a.h <= b.y + b.h + 0.5;
+  for (let i = 0; i < rects.length; i++)
+    for (let j = i + 1; j < rects.length; j++)
+      if (overlaps(rects[i], rects[j], 1) && !inside(rects[i], rects[j]) && !inside(rects[j], rects[i]))
+        problems.push(`Rects ${rects[i].owner} and ${rects[j].owner} partly overlap; move them apart or put one fully inside the other.`);
+
+  const labels = elements.map(e => labelBox(e, width)).filter((b): b is Box => b !== null);
+  for (let i = 0; i < labels.length; i++) {
+    const a = labels[i];
+    if (a.x < 4 || a.y < 4 || a.x + a.w > width - 4 || a.y + a.h > height - 4) problems.push(`The label of ${a.owner} runs off the canvas; shorten it or move the element.`);
+    for (let j = i + 1; j < labels.length; j++) if (overlaps(a, labels[j], 1)) problems.push(`The labels of ${a.owner} and ${labels[j].owner} collide; move one of them.`);
+    for (const r of rects) if (r.owner !== a.owner && overlaps(a, r, 1)) problems.push(`The label of ${a.owner} sits on top of ${r.owner}; move one of them.`);
+  }
+
+  // Every arrow starts or ends at a part (a rect or zone, within 30 units).
+  for (const e of elements.filter(el => el.type === 'arrow')) {
+    const near = (x: number, y: number) => areas.some(a => x >= a.x - 30 && x <= a.x + a.w + 30 && y >= a.y - 30 && y <= a.y + a.h + 30);
+    if (!near(e.x, e.y) && !near(e.x2 ?? e.x, e.y2 ?? e.y)) problems.push(`Arrow ${e.id} doesn't start or end on any part; connect it to the thing it describes.`);
+  }
+
+  // The drawing should use the canvas, not sit in one corner.
+  const xs = elements.flatMap(e => [e.x, e.type === 'arrow' ? e.x2 ?? e.x : e.x + (e.w ?? 0)]);
+  const ys = elements.flatMap(e => [e.y, e.type === 'arrow' ? e.y2 ?? e.y : e.y + (e.h ?? 0)]);
+  if (Math.max(...xs) - Math.min(...xs) < width * 0.55 || Math.max(...ys) - Math.min(...ys) < height * 0.5)
+    problems.push('The drawing uses too little of the canvas; spread the parts out to fill most of it.');
+  return problems;
+}
+
 /**
  * Checks a lesson against its brief's fact keys. Returns readable problems; an empty list means
  * the lesson can be published.
@@ -245,6 +311,7 @@ export function checkLesson(input: unknown, briefFacts: string[]): string[] {
       if (e.type === 'arrow' && (e.x2 === undefined || e.y2 === undefined)) problems.push(`Diagram arrow ${e.id} needs an end point.`);
     }
     for (const cap of captions) if (cap.elements.some(id => !ids.has(id))) problems.push('A caption points at a diagram element that does not exist.');
+    problems.push(...diagramLayoutProblems(lesson.content));
   }
   if (lesson.format === 'game') problems.push(...gameProblems(lesson.content));
   if (lesson.format === 'sim') {

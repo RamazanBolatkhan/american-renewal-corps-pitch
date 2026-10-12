@@ -13,7 +13,7 @@ export const learnerProfile = pgTable('learner_profile', {
 
 /* ---------- Plan imports: upload → AI extraction → review → approve ---------- */
 
-export const importStatuses = ['extracting', 'needs_review', 'approved', 'failed'] as const;
+export const importStatuses = ['extracting', 'needs_review', 'approved', 'generating', 'published', 'partial', 'failed'] as const;
 export type ImportStatus = (typeof importStatuses)[number];
 
 export const importJob = pgTable('import_job', {
@@ -83,3 +83,46 @@ export const briefFact = pgTable(
   },
   table => [primaryKey({ columns: [table.briefId, table.key] })],
 );
+
+/* ---------- Generated content: one lesson per brief version and format, questions per fact ---------- */
+
+export const lessonFormats = ['read', 'diagram', 'game', 'sim'] as const;
+
+/** A published lesson in the Appendix C shape (`content` is checked by `checkLesson` before it is saved). */
+export const generatedLesson = pgTable(
+  'lesson',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    briefId: uuid('brief_id').notNull().references(() => brief.id, { onDelete: 'cascade' }),
+    topicId: text('topic_id').notNull().references(() => topic.id, { onDelete: 'cascade' }),
+    format: text('format').$type<(typeof lessonFormats)[number]>().notNull(),
+    facts: jsonb('facts').$type<string[]>().notNull(),
+    content: jsonb('content').notNull(),
+    model: text('model').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => [unique('lesson_brief_format').on(table.briefId, table.format)],
+);
+
+export const generatedQuestion = pgTable('question', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  briefId: uuid('brief_id').notNull().references(() => brief.id, { onDelete: 'cascade' }),
+  topicId: text('topic_id').notNull().references(() => topic.id, { onDelete: 'cascade' }),
+  fact: text('fact').notNull(),
+  content: jsonb('content').notNull(),
+  position: integer('position').notNull(),
+});
+
+/** Every AI call the generator makes: what it was for, how it went, and what it cost in tokens. */
+export const generationRun = pgTable('generation_run', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  briefId: uuid('brief_id').notNull().references(() => brief.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // read | diagram | game | sim | questions
+  attempt: integer('attempt').notNull(),
+  status: text('status').$type<'ok' | 'invalid' | 'error'>().notNull(),
+  model: text('model').notNull(),
+  inputTokens: integer('input_tokens'),
+  outputTokens: integer('output_tokens'),
+  problems: jsonb('problems').$type<string[]>().default([]).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

@@ -6,8 +6,9 @@ import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 import { redirect } from 'next/navigation';
 import { db } from '@/db';
-import { brief, briefFact, curriculumModule, importJob, topic } from '@/db/schema';
+import { brief, briefFact, curriculumModule, importJob, topic, type ImportStatus } from '@/db/schema';
 import { runExtraction } from '@/lib/content/extract';
+import { coverageOf, formatKinds, generateForBriefs } from '@/lib/content/generate';
 import { ApprovablePlan, checkAgainstSource, ExtractedPlan, slugify } from '@/lib/content/plan';
 import { can } from '@/lib/permissions';
 import { requireStaff } from '@/lib/session';
@@ -99,6 +100,7 @@ export async function approveImport(formData: FormData) {
   if (!parsed.success) throw new Error(parsed.error.issues.map(i => i.message).join(' '));
   const plan = parsed.data;
   const moduleId = slugify(plan.module.title);
+  const briefIds: string[] = [];
 
   await db.transaction(async tx => {
     await tx
@@ -114,16 +116,52 @@ export async function approveImport(formData: FormData) {
         .insert(brief)
         .values({ topicId, version: (latest ?? 0) + 1, objective: t.objective, commonMistake: t.commonMistake, importJobId: id, createdBy: session.user.id })
         .returning({ id: brief.id });
+      briefIds.push(created.id);
       await tx.insert(briefFact).values(t.facts.map((f, i) => ({ briefId: created.id, key: f.key, text: f.text, sourceQuote: f.sourceQuote, position: i })));
     }
 
     await tx
       .update(importJob)
-      .set({ status: 'approved', draft: plan, moduleId, approvedBy: session.user.id, approvedAt: new Date() })
+      .set({ status: 'generating', draft: plan, moduleId, approvedBy: session.user.id, approvedAt: new Date() })
       .where(and(eq(importJob.id, id), eq(importJob.status, 'needs_review')));
   });
 
+  after(() => runGeneration(id, briefIds));
   revalidatePath('/admin/imports');
   revalidatePath('/admin/content');
+  redirect(`/admin/imports/${id}`);
+}
+
+/** Generates lessons and questions for an approved import, then records whether everything was made. */
+async function runGeneration(jobId: string, briefIds: string[], onlyMissing = false) {
+  let status: ImportStatus = 'partial';
+  try {
+    if (onlyMissing) {
+      const have = await coverageOf(briefIds);
+      await Promise.all(briefIds.map(briefId => {
+        const missing = [
+          ...formatKinds.filter(f => !have.lessons.some(l => l.briefId === briefId && l.format === f)),
+          ...(have.questions.includes(briefId) ? [] : (['questions'] as const)),
+        ];
+        return missing.length ? generateForBriefs([briefId], missing) : null;
+      }));
+    } else {
+      await generateForBriefs(briefIds);
+    }
+    const have = await coverageOf(briefIds);
+    const complete = briefIds.every(b => formatKinds.every(f => have.lessons.some(l => l.briefId === b && l.format === f)) && have.questions.includes(b));
+    status = complete ? 'published' : 'partial';
+  } finally {
+    await db.update(importJob).set({ status }).where(eq(importJob.id, jobId));
+  }
+}
+
+/** Generates whatever is still missing for an import (after a partial run). */
+export async function generateMissing(formData: FormData) {
+  await requireCan('publish');
+  const id = String(formData.get('id'));
+  const briefIds = (await db.select({ id: brief.id }).from(brief).where(eq(brief.importJobId, id))).map(b => b.id);
+  await db.update(importJob).set({ status: 'generating' }).where(eq(importJob.id, id));
+  after(() => runGeneration(id, briefIds, true));
   redirect(`/admin/imports/${id}`);
 }

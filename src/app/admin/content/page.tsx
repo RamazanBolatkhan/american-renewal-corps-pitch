@@ -1,11 +1,11 @@
 import { asc, desc, eq, inArray } from 'drizzle-orm';
 import { Eyebrow, SkeletonNote } from '@/components/ui';
 import { db } from '@/db';
-import { brief, briefFact, curriculumModule, topic } from '@/db/schema';
+import { brief, briefFact, curriculumModule, generatedLesson, generatedQuestion, topic } from '@/db/schema';
 import { coolingModule, formatInfo, formats } from '@/lib/module';
 import { requireStaff } from '@/lib/session';
 
-type TopicView = { id: string; title: string; version: number | null; facts: { key: string; text: string }[] };
+type TopicView = { id: string; title: string; version: number | null; facts: { key: string; text: string }[]; formats: string[]; questionFacts: string[] };
 type ModuleView = { id: string; title: string; program: string | null; topics: TopicView[] };
 
 /** Approved modules with each topic's latest brief version. */
@@ -21,13 +21,20 @@ async function loadModules(): Promise<ModuleView[]> {
   const facts = latest.size
     ? await db.select().from(briefFact).where(inArray(briefFact.briefId, [...latest.values()].map(b => b.id))).orderBy(asc(briefFact.position))
     : [];
+  const latestIds = [...latest.values()].map(b => b.id);
+  const lessons = latestIds.length ? await db.select({ briefId: generatedLesson.briefId, format: generatedLesson.format }).from(generatedLesson).where(inArray(generatedLesson.briefId, latestIds)) : [];
+  const questions = latestIds.length ? await db.select({ briefId: generatedQuestion.briefId, fact: generatedQuestion.fact }).from(generatedQuestion).where(inArray(generatedQuestion.briefId, latestIds)) : [];
   return modules.map(m => ({
     id: m.id,
     title: m.title,
     program: m.program,
     topics: topics.filter(t => t.moduleId === m.id).map(t => {
       const b = latest.get(t.id);
-      return { id: t.id, title: t.title, version: b?.version ?? null, facts: b ? facts.filter(f => f.briefId === b.id) : [] };
+      return {
+        id: t.id, title: t.title, version: b?.version ?? null, facts: b ? facts.filter(f => f.briefId === b.id) : [],
+        formats: b ? lessons.filter(l => l.briefId === b.id).map(l => l.format) : [],
+        questionFacts: b ? questions.filter(q => q.briefId === b.id).map(q => q.fact) : [],
+      };
     }),
   }));
 }
@@ -37,7 +44,7 @@ export default async function ContentPage() {
   const stored = await loadModules();
   const modules: ModuleView[] = stored.length
     ? stored
-    : [{ id: coolingModule.id, title: coolingModule.title, program: coolingModule.program, topics: coolingModule.topics.map(t => ({ id: t.id, title: t.title, version: null, facts: t.facts })) }];
+    : [{ id: coolingModule.id, title: coolingModule.title, program: coolingModule.program, topics: coolingModule.topics.map(t => ({ id: t.id, title: t.title, version: null, facts: t.facts, formats: [...formats], questionFacts: t.facts.map(f => f.key) })) }];
 
   return (
     <>
@@ -65,8 +72,8 @@ export default async function ContentPage() {
                     {t.facts.map(fact => (
                       <tr key={fact.key}>
                         <td><b className="ui-yes" style={{ fontWeight: 400 }}>{fact.key.toUpperCase()}</b> {fact.text}</td>
-                        {formats.map(f => <td key={f}><span className="ui-pill">NOT GENERATED</span></td>)}
-                        <td><span className="ui-pill">NONE</span></td>
+                        {formats.map(f => <td key={f}>{t.formats.includes(f) ? <span className="ui-pill ui-pill--approved">READY</span> : <span className="ui-pill">NOT GENERATED</span>}</td>)}
+                        <td>{t.questionFacts.includes(fact.key) ? <span className="ui-pill ui-pill--approved">READY</span> : <span className="ui-pill">NONE</span>}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -76,7 +83,7 @@ export default async function ContentPage() {
           ))}
         </div>
       ))}
-      <SkeletonNote>Lesson generation is the next step. Coverage will come from each lesson’s fact references.</SkeletonNote>
+      <SkeletonNote>Ready means the lesson for the topic’s latest brief passed every check, including teaching every fact. The sample module is hand-written.</SkeletonNote>
     </>
   );
 }
