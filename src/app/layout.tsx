@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import './system.css';
+
+// Inter is the copy face of the shadcn preset; next/font self-hosts it at build time.
+const inter = Inter({ subsets: ['latin'], weight: ['400', '600'], variable: '--font-inter', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'American Renewal Corps — Build What’s Next',
@@ -11,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         {children}
         <Analytics />

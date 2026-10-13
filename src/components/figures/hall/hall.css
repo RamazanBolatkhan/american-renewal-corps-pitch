@@ -1,23 +1,24 @@
-/* ARC tokens for the data-hall figure: deep greens, cream lines, orange for the one thing to watch. */
+/* ARC tokens for the data-hall figure: a light technical drawing. Cream plate and faces, sage shading,
+   dark green linework, orange for hot air and the one thing to watch, a deep blue for cool supply air. */
 .iso.hall{
-  --anatomy-card:#05301f;--anatomy-paper:#05301f;--anatomy-face:#0f4a33;--anatomy-top:#0e4730;
-  --anatomy-shade-0:#04281a;--anatomy-shade-1:#062e1f;--anatomy-shade-2:#083524;--anatomy-shade-3:#0a3c29;
-  --anatomy-lit-top:#3a2a1c;--anatomy-lit-shade:#2c2216;
-  --anatomy-hi:#f3f2e9;--anatomy-mid:#9fbaa8;--anatomy-lo:#5d8670;--anatomy-faint:#2f5f47;--anatomy-lit:#ff6b35;
-  --anatomy-halo:#00140b;--anatomy-dot:#f3f2e9;
-  --anatomy-red:#ff6b35;--anatomy-blue:#9ccddc;
-  --anatomy-text:#d5e1d6;--anatomy-strong:#f3f2e9;--anatomy-muted:#a7bdad;
+  --anatomy-card:#ecebe1;--anatomy-paper:#ecebe1;--anatomy-face:#faf9f3;--anatomy-top:#f8f7f0;
+  --anatomy-shade-0:#6f907d;--anatomy-shade-1:#8ea898;--anatomy-shade-2:#b3c6b8;--anatomy-shade-3:#d6e0d6;
+  --anatomy-lit-top:#fde6da;--anatomy-lit-shade:#f6cfbc;
+  --anatomy-hi:#06402b;--anatomy-mid:#4f7563;--anatomy-lo:#94ab9c;--anatomy-faint:#c6d0c3;--anatomy-lit:#e0521d;
+  --anatomy-halo:#6f7d6a;--anatomy-halo-opacity:.3;--anatomy-dot:#06402b;
+  --anatomy-red:#e0521d;--anatomy-blue:#2c7a9a;
+  --anatomy-text:#3d3d33;--anatomy-strong:#06402b;--anatomy-muted:#5f5f4e;
   color:var(--anatomy-text);
 }
-.iso.hall .iso-plate{box-shadow:0 0 0 1px #f3f2e937}
+.iso.hall .iso-plate{box-shadow:0 0 0 1px #c9c7b6}
 .iso.hall .iso-figure{margin:0}
-.hall-void{fill:#00140b;stroke:none}
+.hall-void{fill:#06402b;stroke:none}
 .hall-fan{fill:none;stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight)}
 .hall-lcd{fill:#8fd3a8;font-family:var(--anatomy-mono);font-variant-numeric:tabular-nums}
 .hall-lcd[data-hot]{fill:var(--anatomy-lit)}
 .iso.hall [data-part]{cursor:default}
 .iso.hall .iso-line[data-tone="red"][data-flow],.iso.hall .iso-line[data-tone="blue"][data-flow]{stroke-width:1.5;stroke-dasharray:3.5 4.5}
-.hall-lcd-window{fill:#00140b;stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight)}
+.hall-lcd-window{fill:#06402b;stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight)}
 /* Phones: scale the drawing up inside the card and crop the empty floor margins. */
 .iso.hall .iso-plate{overflow:hidden}
 @media (max-width:560px){
@@ -35,3 +36,6 @@
 .hall-interactive [data-part]:hover .iso-line[data-tone="lo"],.hall-interactive [data-part]:focus-visible .iso-line[data-tone="lo"]{stroke:var(--anatomy-mid)}
 .hall-interactive [data-part]:focus-visible .hall-hit{stroke:var(--anatomy-lit);stroke-width:1.2}
 .hall-note{min-height:1.6em;margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--anatomy-text)}
+/* The figure is one plate: the legend joins the plate, the live note uses page ink. */
+.iso.hall .iso-legend{margin-top:0;padding:12px 16px 14px;background:var(--anatomy-card);box-shadow:0 0 0 1px var(--anatomy-mid);color:var(--anatomy-muted)}
+.iso.hall .hall-note{color:var(--text-soft,#3d3d33)}
