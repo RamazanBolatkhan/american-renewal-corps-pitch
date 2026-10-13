@@ -7,7 +7,7 @@ A web app that turns a training plan into lessons in four formats (Read, Diagram
 | Area | Technology |
 |---|---|
 | Framework | Next.js 16 (App Router, server components, server actions), React 19, TypeScript 5.9 |
-| Styling | Plain CSS with design tokens (`src/app/system.css`); locally hosted Barlow Condensed and DM Sans |
+| Styling | Plain CSS with design tokens (`src/app/system.css`); locally hosted Barlow Condensed headings, Inter copy (via `next/font`) |
 | Hosting | Vercel (Fluid compute functions, `after()` background work), Vercel Analytics |
 | Database | Neon Postgres (via Vercel Marketplace), Drizzle ORM and drizzle-kit migrations, `pg` driver with Vercel’s connection pooling |
 | Authentication | Better Auth 1.7: email and password, anonymous demo users, admin plugin with custom roles, optional Google OAuth |
@@ -17,6 +17,42 @@ A web app that turns a training plan into lessons in four formats (Read, Diagram
 | Email | Resend HTTP API for password reset and email confirmation (switched on by configuration) |
 | Illustration | Anatomy isometric SVG kit (MIT) for the interactive data-hall scene; all drawings are SVG generated from data, no AI image generation |
 | Validation and tests | Zod schemas for every lesson format; Vitest for content checks |
+
+## Why these technologies
+
+### Framework: Next.js 16, React 19, TypeScript
+
+| Option | What it would have meant |
+|---|---|
+| **Next.js (chosen)** | One codebase for the student app, the admin area and the backend. Server components read the database directly, server actions handle forms, and `after()` runs AI generation in the background. |
+| React Router 7 / Remix | A similar model, but less built-in support on Vercel, and no `after()` or server components for background work. |
+| SvelteKit | A strong framework, but a smaller set of libraries. The Anatomy drawing kit and Better Auth's React helpers are written for React. |
+| Vite single-page app + separate API (Express/FastAPI) | Two deployments and two codebases. The same lesson types would be defined twice, and the frontend and backend would drift apart. |
+
+**TypeScript** keeps the whole pipeline on one set of types. A Zod schema describes a lesson once. That one schema checks the AI's output, gets stored in Postgres, and is read by the React renderer, so a field renamed in one place fails the build everywhere it's used.
+
+### Hosting: Vercel vs Cloudflare
+
+| | Vercel (chosen) | Cloudflare Workers |
+|---|---|---|
+| Next.js support | Built by the same team; every feature works without an adapter | Runs through the OpenNext adapter, and some features lag behind |
+| Long AI jobs | Fluid compute functions run up to 300 s by default; generating one module takes about 45 s and runs in `after()` | Workers are limited by CPU time; long jobs need Queues or Durable Objects |
+| Previews | A preview URL for every branch, which the assignment asks for | Also has previews, but they need more setup |
+| Services | Neon, Blob and AI Gateway install from the Marketplace with environment variables filled in automatically | Would mean D1 or Hyperdrive, R2 and a separate AI provider |
+| Cost at scale | Higher per request | Cheaper at very high traffic |
+
+Cloudflare wins on raw cost at very high traffic. For a pitch-sized app with long AI jobs and a preview requirement, Vercel needs the least custom setup.
+
+### Database: Neon Postgres
+
+- Neon is a native Vercel Marketplace integration. One click provisions it, and its connection settings appear in every environment (production, previews and local).
+- It's standard Postgres used through Drizzle, so moving to **Supabase** (or any Postgres) means a `pg_dump` and a new `DATABASE_URL`. The schema and queries don't change.
+- We didn't choose **Convex** because it isn't a relational database. Our data is relational:
+  - modules → topics → versioned briefs → facts → lessons and questions;
+  - foreign keys and cascading deletes;
+  - a unique constraint on `(topic, version)` so a brief is never overwritten.
+
+  Convex is a document store with its own query language, so we'd have to enforce those rules in application code ourselves.
 
 ## Architecture
 
@@ -159,11 +195,136 @@ type HallState = {
 
 **Interaction** (`live.tsx`). The browser does no 3D maths. When the state changes it shows or hides the tagged versions, slides the door leaves with an eased motion, writes the sensor displays and the readout from a small illustrative temperature model (`model.ts`, readings above 27 °C turn orange), and lets CSS animate the airflow dashes. Every part is tagged with `data-part`: hovering or focusing a part names it and its fact, and clicking it (or pressing Enter) changes the state, which redraws the scene the same way.
 
-### Accounts and roles
-- Better Auth stores users and sessions in Postgres; sessions are httpOnly cookies, sign-in is rate-limited.
-- Roles: student (default), editor, publisher, admin, defined once with Better Auth’s access control and used by `can(role, action)`.
-- The admin area is protected in three layers: a cookie check in `src/proxy.ts`, a role check in the admin layout and every admin page, and a role check in every admin server action. The learner interface has no link to it.
-- Admins create staff accounts with a temporary password that must be replaced at first log-in, and can reset other users’ passwords. Password-reset emails, email confirmation and Google sign-in switch on through configuration.
+### Authentication
+
+Better Auth 1.7 handles sign-up and log-in, with three plugins:
+- **anonymous**: demo visitors who haven't signed up;
+- **admin**: roles and user management;
+- **nextCookies**: sets cookies from server actions.
+
+#### How a session is created
+
+```mermaid
+sequenceDiagram
+    actor U as Browser
+    participant A as Server action (/login)
+    participant BA as Better Auth
+    participant DB as Neon Postgres
+
+    U->>A: email + password
+    A->>BA: signInEmail()
+    BA->>DB: SELECT user, account (password hash)
+    BA->>BA: verify password with scrypt
+    BA->>BA: create random session token (32 bytes)
+    BA->>DB: INSERT session (token, user_id, expires_at = now + 7 days, ip, user agent)
+    BA->>BA: sign token with HMAC-SHA256(BETTER_AUTH_SECRET)
+    BA-->>U: Set-Cookie __Secure-better-auth.session_token = token.signature<br/>HttpOnly · Secure · SameSite=Lax · 7 days
+```
+
+#### How every request is checked
+
+```mermaid
+flowchart LR
+    R[Request with cookie] --> P{"/admin? proxy.ts:<br/>is there a session cookie?"}
+    P -- no --> L["Redirect to /login?next=…"]
+    P -- yes / not admin --> S["getSession() on the server"]
+    S --> V{Signature valid?}
+    V -- no --> X[Treated as logged out]
+    V -- yes --> D[(Find session row + user)]
+    D --> E{Expired or deleted?}
+    E -- yes --> X
+    E -- no --> RO{"can(role, action)"}
+    RO -- no --> N["/no-access"]
+    RO -- yes --> OK[Page or action runs]
+    D -. older than 1 day .-> RF[Expiry extended 7 more days]
+```
+
+The proxy only checks that a cookie exists, which makes the redirect fast. The real check is `requireStaff` / `requireAdmin` / `can(role, action)` inside every admin page and server action. The learner interface has no link to the admin area. Sign-in is rate-limited.
+
+#### Why a database session instead of a JWT
+
+A JWT is checked by its signature alone, so it stays valid until it expires, even after it should have stopped working. Three cases where that matters here:
+
+- **Password reset** has to log out every device. It does this by deleting the session rows (`revokeSessionsOnPasswordReset`).
+- **Role changes** take effect on the next request. When an admin demotes an editor, the editor loses `/admin` immediately.
+- **Account deletion and log-out** delete the row, and the cookie stops working instantly.
+
+The cost is one indexed database lookup per request, which is small next to the page's own queries. If we add a mobile app or third-party API later, Better Auth's `jwt` plugin can issue short-lived JWTs alongside these sessions.
+
+#### Other flows
+
+- **Demo visitors:** the anonymous plugin creates a user with `isAnonymous = true` and the same session cookie. On sign-up, `onLinkAccount` moves their chosen learning style to the new account, and the anonymous user is deleted.
+- **Google (switched on by configuration):**
+  - The app redirects to Google with a signed `state` cookie, so the callback can be trusted.
+  - Google returns a code to `/api/auth/callback/google`, and the app exchanges it for the user's profile.
+  - It creates or links an `account` row and issues the same session cookie as email log-in.
+- **Staff accounts:** an admin creates the account with a 14-character temporary password and `mustChangePassword = true`. The person can't reach any page until they choose their own password. Admins can also reset other users' passwords.
+- **Email:** password-reset emails and email confirmation switch on through configuration.
+
+#### Roles
+
+| Role | upload | edit | regenerate | publish | manage users |
+|---|---|---|---|---|---|
+| student | | | | | |
+| editor | ✓ | ✓ | ✓ | | |
+| publisher | ✓ | ✓ | ✓ | ✓ | |
+| admin | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+Roles are defined once with Better Auth's access control and checked by `can(role, action)`.
+
+### AI: model choice and cost
+
+Generation runs through Vercel AI Gateway with **Claude Haiku 5.5**. Every call is logged in `generation_run` with its token counts. These are the real numbers from the published Cooling & airflow module: 3 topics, 17 calls, 32,530 input tokens and 52,221 output tokens.
+
+**Per topic, on average: 10,843 input and 17,407 output tokens.** That covers Read, Diagram, Game, Sim and the questions, including retries.
+
+#### Cost of generating one topic
+
+All prices are AI Gateway list prices per 1M tokens (October 2026). The other models are priced on the same token counts; their real counts would differ somewhat.
+
+| Model | Input / output per 1M | **One topic** | One module (3 topics) | 50 modules (150 topics) |
+|---|---|---|---|---|
+| **Claude Haiku 5.5 (used)** | $0.10 / $0.50 | **$0.0098** | **$0.029** | **$1.47** |
+| Claude Haiku 5.5, batch API | $0.05 / $0.25 | $0.0049 | $0.015 | $0.74 |
+| Gemini 3.1 Flash Lite | $0.25 / $1.50 | $0.029 | $0.086 | $4.32 |
+| GPT-5.4 mini | $0.75 / $4.50 | $0.087 | $0.26 | $12.97 |
+| Gemini 3.5 Flash | $1.50 / $9.00 | $0.17 | $0.52 | $25.94 |
+| Claude Sonnet 5.5 | $2 / $10 | $0.20 | $0.59 | $29.37 |
+| Claude Opus 5.5 | $4 / $20 | $0.39 | $1.18 | $58.73 |
+| Claude Fable 5.1 | $10 / $50 | $0.98 | $2.94 | $146.84 |
+
+#### How Haiku performed
+
+- 15 of 17 calls passed every check on the first try. The 2 that failed were both diagrams, rejected for label collisions and fixed on the retry.
+- All 15 pieces (5 formats × 3 topics) were stored, with 100% fact coverage.
+- Extracting a plan takes about 16 s and generating a module about 45 s.
+- Sonnet would cost 20× more. Because every lesson has to pass the automatic checks anyway, the cheaper model plus at most three attempts (`ATTEMPTS = 3`, each retry gets the list of problems) gives the same guaranteed result.
+- One known weakness: Haiku sometimes points diagram arrows the wrong way. The checks catch arrows that end in empty space, not arrows that point backwards.
+
+Extraction (reading the uploaded plan) is one extra call per upload. It isn't in the run log yet, so it isn't in these totals.
+
+### Validation and tests
+
+#### Why every lesson format has a Zod schema
+
+- **AI output can't be trusted.** The model fills the schema through structured output (`Output.object`), and anything that doesn't match is rejected before it reaches the database.
+- **One definition, used everywhere.** The same schema is the TypeScript type, the shape of the stored JSON, and the props of the renderer. Hand-written lessons and generated ones go through the same gate.
+- **A discriminated union by format** (`read | diagram | game | sim`) means a renderer can't receive the wrong kind of lesson.
+- On top of the shape, `checkLesson` / `checkQuestion` check meaning: which facts are covered, word counts, the diagram layout, whether a game can be solved, and whether there's exactly one correct answer.
+
+#### Why the content checks have tests
+
+The checks decide what students see, so the checks themselves need to be proven. The 35 Vitest tests in `src/lib/content/lessons.test.ts` cover two things:
+
+- **The good passes:** the hand-written Cooling & airflow lessons and questions pass every check.
+- **The bad fails:** deliberately broken lessons are caught. Examples:
+  - a missing fact or a made-up fact;
+  - a Read lesson that's too short;
+  - two correct answers;
+  - an unsolvable match or sort;
+  - overlapping diagram parts, colliding labels and arrows going nowhere.
+
+If someone loosens a check by mistake, a test fails before the change ships.
 
 ### Data model
 | Table | Holds |
