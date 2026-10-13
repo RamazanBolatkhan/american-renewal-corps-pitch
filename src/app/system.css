@@ -317,36 +317,36 @@ body{margin:0;background:var(--white)}
 .lesson-feedback.is-correct b{color:var(--ok)}
 .lesson-feedback.is-wrong b{color:var(--orange-ink)}
 .lesson-retry{background:none;border:0;color:var(--green);font-weight:600;border-bottom:1px solid var(--orange);padding:0;font:inherit;cursor:pointer}
-/* Diagrams stay on a dark green technical plate. */
-.diagram-frame{border:1px solid var(--green);background:#022a1c;padding:12px;overflow-x:auto}
+/* Diagrams: a light technical plate with green linework; blue for cool air, orange for hot, amber for warnings. */
+.diagram-frame{border:1px solid var(--line-strong);background:var(--surface);padding:12px;overflow-x:auto}
 .diagram-svg{display:block;width:100%;min-width:520px;height:auto}
 .diagram-el{cursor:pointer;transition:opacity .25s}
-.diagram-el.is-dim{opacity:.22}
-.diagram-el rect{fill:#0d4a34;stroke:#f3f2e999;stroke-width:1.2}
-.diagram-el.type-zone rect{stroke-dasharray:5 4;fill:#f3f2e908}
-.diagram-el.tone-cool rect{fill:#9ccddc1f;stroke:#9ccddc}
-.diagram-el.tone-hot rect{fill:#ff6b351c;stroke:#ff6b35}
-.diagram-el.tone-warning rect{fill:#ffb02e24;stroke:#ffb02e;stroke-dasharray:4 3}
+.diagram-el.is-dim{opacity:.25}
+.diagram-el rect{fill:#d3e0d2;stroke:#06402b;stroke-width:1.2}
+.diagram-el.type-zone rect{stroke-dasharray:5 4;fill:#06402b08;stroke:#4f7563}
+.diagram-el.tone-cool rect{fill:#2c7a9a14;stroke:#2c7a9a}
+.diagram-el.tone-hot rect{fill:#ff6b3517;stroke:#e0521d}
+.diagram-el.tone-warning rect{fill:#e9a23b1f;stroke:#b7791f;stroke-dasharray:4 3}
 .diagram-el.is-lit rect{stroke-width:2.4}
-.diagram-el line{stroke:#f3f2e9cc;stroke-width:2.2}
-.diagram-el.tone-cool line{stroke:#9ccddc}
-.diagram-el.tone-hot line{stroke:#ff6b35}
-.diagram-el.tone-warning line{stroke:#ffb02e;stroke-dasharray:6 4}
-.diagram-head{fill:#f3f2e9cc}
-.diagram-head.tone-cool{fill:#9ccddc}
-.diagram-head.tone-hot{fill:#ff6b35}
-.diagram-head.tone-warning{fill:#ffb02e}
-.diagram-text{fill:var(--paper);font:12px var(--body);letter-spacing:.02em;pointer-events:none}
-.diagram-text.is-zone{font-size:11px;letter-spacing:.12em;text-transform:uppercase;fill:#f3f2e9b3}
-.diagram-text.is-arrow{font-size:11px;fill:#f3f2e9e6}
-.diagram-text.is-note{font-size:12px;fill:#d5e1d6}
+.diagram-el line{stroke:#06402b;stroke-width:2.2}
+.diagram-el.tone-cool line{stroke:#2c7a9a}
+.diagram-el.tone-hot line{stroke:#e0521d}
+.diagram-el.tone-warning line{stroke:#b7791f;stroke-dasharray:6 4}
+.diagram-head{fill:#06402b}
+.diagram-head.tone-cool{fill:#2c7a9a}
+.diagram-head.tone-hot{fill:#e0521d}
+.diagram-head.tone-warning{fill:#b7791f}
+.diagram-text{fill:var(--green);font:600 12px var(--body);letter-spacing:.02em;pointer-events:none}
+.diagram-text.is-zone{font-size:11px;letter-spacing:.12em;text-transform:uppercase;fill:#4f5f55}
+.diagram-text.is-arrow{font-size:11px;fill:var(--ink)}
+.diagram-text.is-note{font-size:12px;font-weight:400;fill:var(--text-soft)}
 .diagram-captions{list-style:none;padding:0;margin:0;display:grid;gap:8px}
 .diagram-caption{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;text-align:left;background:var(--white);border:1px solid var(--line-strong);color:var(--text-soft);padding:12px 14px;font:15px/1.5 var(--body);cursor:pointer}
 .diagram-caption:hover{border-color:var(--green)}
 .diagram-caption.is-active{border-color:var(--orange);border-left:3px solid var(--orange);background:var(--orange-tint);color:var(--strong)}
 @media(max-width:600px){.lesson-terms div{grid-template-columns:1fr;gap:2px}.lesson-read .lesson-para{grid-template-columns:1fr;gap:6px}}
 @media(prefers-reduced-motion:reduce){.diagram-el{transition:none}}
-.diagram-text{paint-order:stroke;stroke:#022a1c;stroke-width:4px;stroke-linejoin:round}
+.diagram-text{paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
 .ui-drop--active{border-color:var(--orange-ink);border-style:solid;background:var(--orange-tint)}
 .hall-demo{display:grid;gap:16px}
 .hall-controls{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;border:1px solid var(--line);background:var(--surface);padding:14px 16px;font-size:13px;color:var(--text-soft)}
