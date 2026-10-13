@@ -134,3 +134,4 @@ The repository is connected to Vercel. This redesign is developed on feature/int
 - Landing: white story column, green stage behind the phone, orange "Start learning" button.
 - The data-hall scene and diagrams stay on dark green plates; the scene legend joins the plate so its cream swatches stay readable.
 - Verified at 1440 and 390 wide on the landing, start, login, style, plan, the four lesson formats and the scene page; 35 unit tests pass; scene line check 0 floating ends (default and faults). Admin pages were restyled by the same tokens but not checked in the browser.
+- Follow-up: pure white read differently from the cream phone screen, so cream #F3F2E9 is now the page, card and input colour everywhere, with #ECEBE1 for panels and #DEDCCE / #C9C7B6 for borders. To keep contrast on cream, small orange text and filled buttons moved to #B8410F (4.9:1), large orange type to #E0521D (3.5:1) and muted text to #5F5F4E (5.8:1).

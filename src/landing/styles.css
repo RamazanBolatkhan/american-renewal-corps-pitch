@@ -88,33 +88,33 @@
 @media(max-width:430px){.site-header .brand-name{display:none}}
 @media(max-width:360px){.header-actions .icon{display:none}}
 
-/* Balanced palette (shadcn "sera" preset): white editorial column, green stage for the phone,
-   orange for the main action. #EA5A20 is the large-type orange, #C4481B the small-text orange. */
-:root{color:var(--green);background:#fff;font-family:var(--font-inter,Inter),DM,Arial,sans-serif}
-.site-shell{background:#fff}
-.site-header{border-bottom-color:#e8e8e3}
+/* Balanced palette (shadcn "sera" preset): cream editorial column (same cream as the phone screen), green stage for the phone,
+   orange for the main action. #E0521D is the large-type orange, #B8410F the small-text orange. */
+:root{color:var(--green);background:#f3f2e9;font-family:var(--font-inter,Inter),DM,Arial,sans-serif}
+.site-shell{background:#f3f2e9}
+.site-header{border-bottom-color:#dedcce}
 .brand-name,.header-note,.story-eyebrow{font-weight:600}
-.header-note{color:#666654}
-.outline-button{color:var(--green);border-color:#d3d2c4;background:#fff;font-weight:600;letter-spacing:.12em}
-.outline-button:hover{background:#fbfbf8;border-color:var(--green)}
-.start-trigger{color:#fff;background:#c4481b;border-color:#c4481b}
-.start-trigger:hover{background:#a83a14;border-color:#a83a14}
-.contact-trigger{color:var(--green);border-color:#d3d2c4}
+.header-note{color:#5f5f4e}
+.outline-button{color:var(--green);border-color:#c9c7b6;background:#f3f2e9;font-weight:600;letter-spacing:.12em}
+.outline-button:hover{background:#ecebe1;border-color:var(--green)}
+.start-trigger{color:#f3f2e9;background:#b8410f;border-color:#b8410f}
+.start-trigger:hover{background:#9c370c;border-color:#9c370c}
+.contact-trigger{color:var(--green);border-color:#c9c7b6}
 h1{color:var(--green)}
-.story-eyebrow{color:#666654}
+.story-eyebrow{color:#5f5f4e}
 .story-description{color:#3d3d33}
-.story-feature{border-color:#e8e8e3;border-left:3px solid var(--orange);background:#fbfbf8}
+.story-feature{border-color:#dedcce;border-left:3px solid var(--orange);background:#ecebe1}
 .feature-icon{background:var(--green);color:var(--paper)}
-.story-feature p{color:#666654}
-.story-note{color:#666654}
-.chapter-nav{border-top-color:#e8e8e3;--chapter-accent:#ea5a20}
-.chapter-nav button{color:#666654}
+.story-feature p{color:#5f5f4e}
+.story-note{color:#5f5f4e}
+.chapter-nav{border-top-color:#dedcce;--chapter-accent:#e0521d}
+.chapter-nav button{color:#5f5f4e}
 .chapter-number{color:#a3a392}
 .chapter-nav button[aria-current=page]{color:var(--green)}
 .demo-stage{border-left:0;background:radial-gradient(ellipse at 50% 50%,#26614560 0%,transparent 65%),var(--green)}
-.site-footer{border-top-color:#e8e8e3;color:#666654}
+.site-footer{border-top-color:#dedcce;color:#5f5f4e}
 .footer-concept{color:#8a8a76}
 .site-footer button{color:var(--green)}
-.skip-link{background:var(--green);color:#fff}
-.accent-line{color:#ea5a20}
-.feature-corner{color:#c4481b}
+.skip-link{background:var(--green);color:#f3f2e9}
+.accent-line{color:#e0521d}
+.feature-corner{color:#b8410f}

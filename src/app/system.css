@@ -1,9 +1,9 @@
 /*
  * Shared design system for every page except the landing experience.
- * Light, balanced palette from the shadcn "sera" preset (b6thgqxmK): white surfaces, hairline
+ * Light, balanced palette from the shadcn "sera" preset (b6thgqxmK): cream #F3F2E9 surfaces (the same cream as the landing phone screen), hairline
  * borders, square uppercase buttons, Inter copy. Brand roles:
  *   white/cream  surfaces        green #06402B  headings, selection, footer, technical plates
- *   orange #FF6B35 fills and bars; #EA5A20 for large display type (3:1); #C4481B for small text and filled buttons (4.5:1)
+ *   orange #FF6B35 fills and bars; #E0521D for large display type (3:1 on cream); #B8410F for small text and filled buttons (4.5:1)
  * Barlow Condensed 800 stays for display headings. Everything is scoped under .ui.
  */
 @font-face{font-family:Barlow;src:url('/fonts/barlow-condensed-800.ttf') format('truetype');font-weight:800;font-display:swap}
@@ -11,10 +11,10 @@
 
 :root{
   --green:#06402B;--green-hover:#0b5239;--green-tint:#06402b0f;--deep:#032f20;
-  --paper:#f3f2e9;--white:#ffffff;--surface:#fbfbf8;
-  --orange:#ff6b35;--orange-ink:#c4481b;--orange-display:#ea5a20;--orange-hover:#a83a14;--orange-tint:#ff6b3517;
-  --ink:#1d1d16;--strong:#0c0c09;--text-soft:#3d3d33;--text-muted:#666654;
-  --line:#e8e8e3;--line-strong:#d3d2c4;
+  --paper:#f3f2e9;--white:#f3f2e9;--surface:#ecebe1;
+  --orange:#ff6b35;--orange-ink:#b8410f;--orange-display:#e0521d;--orange-hover:#9c370c;--orange-tint:#ff6b3517;
+  --ink:#1d1d16;--strong:#0c0c09;--text-soft:#3d3d33;--text-muted:#5f5f4e;
+  --line:#dedcce;--line-strong:#c9c7b6;
   --ok:#1f7a4d;--ok-tint:#1f7a4d14;--bad:#b4361a;
   --display:Barlow,'Arial Narrow',Impact,sans-serif;--body:var(--font-inter,Inter),DM,Arial,sans-serif;
 }
@@ -124,7 +124,7 @@ body{margin:0;background:var(--white)}
 .ui-style-card[aria-current=true]{border-color:var(--orange);border-top:4px solid var(--orange);background:var(--surface)}
 
 /* Demo banner */
-.ui-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;background:var(--paper);border-left:4px solid var(--orange);padding:12px 16px;margin-bottom:36px;font-size:12px;letter-spacing:.02em;color:var(--text-soft)}
+.ui-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;background:var(--surface);border-left:4px solid var(--orange);padding:12px 16px;margin-bottom:36px;font-size:12px;letter-spacing:.02em;color:var(--text-soft)}
 .ui-banner strong{color:var(--orange-ink);font-weight:600;letter-spacing:.14em;font-size:10px;margin-right:10px}
 .ui-banner a{color:var(--green);font-weight:600;border-bottom:1px solid var(--orange);white-space:nowrap}
 
