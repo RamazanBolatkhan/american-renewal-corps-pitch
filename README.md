@@ -66,6 +66,49 @@ flowchart LR
 - **Data-hall scene** is a hand-built isometric SVG of a contained cold aisle. Lesson data binds game items and sim decisions to scene states (open door, reversed rack, missing blanking panel, misplaced tile). Students can click parts to change them; illustrative inlet readings respond, and the facts each problem goes against are highlighted in the lesson.
 - **Catalog** serves approved, generated modules from the database alongside the hand-written sample module.
 
+### How diagrams are drawn
+Diagrams are data, not images: no AI image generation is used. The generator writes shapes with coordinates, and the app draws them as SVG.
+
+**The data.** A diagram lesson is one row in the `lesson` table; its `content` holds a 640 × 360 canvas, a list of elements and a list of captions. Every element and caption names the facts it teaches. Shortened from a real generated lesson:
+
+```json
+{
+  "title": "Containment: keeping hot and cold air apart",
+  "width": 640, "height": 360,
+  "elements": [
+    { "id": "cold-aisle", "type": "zone",  "x": 160, "y": 40,  "w": 320, "h": 290, "tone": "cool",    "label": "Cold aisle", "facts": ["f1"] },
+    { "id": "door-open",  "type": "rect",  "x": 476, "y": 60,  "w": 10,  "h": 200, "tone": "warning", "label": "Door open", "labelAt": "right", "facts": ["f2"] },
+    { "id": "hot-leak",   "type": "arrow", "x": 140, "y": 190, "x2": 476, "y2": 190, "tone": "hot", "label": "Hot exhaust leak", "facts": ["f2"] }
+  ],
+  "captions": [
+    { "text": "An open containment door lets hot exhaust leak into the cold aisle.", "facts": ["f2"], "elements": ["door-open", "hot-leak"] }
+  ]
+}
+```
+
+**From the database to the browser.**
+```
+Postgres (lesson.content, jsonb)
+  → catalog.getLesson(topic, "diagram")    server only
+  → Lesson.safeParse(...)                  Zod: malformed data never reaches the page
+  → LessonPage (server component)
+  → DiagramLesson (client component)       receives the JSON as props and draws SVG
+```
+The browser never queries the database; it receives the JSON as component props.
+
+**Drawing.** `src/components/lessons/DiagramLesson.tsx` renders each element inside `<svg viewBox="0 0 640 360">`, so the drawing scales to any screen. Areas are drawn first, then boxes, arrows and labels, so lines sit on top.
+
+| Element | Drawn as |
+|---|---|
+| `zone` | dashed rectangle, label inside its bottom-left corner |
+| `rect` | rectangle; label inside if it fits (about 6.4 units per character), otherwise above, or where `labelAt` says |
+| `arrow` | line with an arrowhead marker, label at its start, middle or end |
+| `label` | plain text |
+
+Colour comes from `tone` through CSS (`cool` pale blue, `hot` orange, `warning` dashed amber, `neutral` cream), so the model decides what and where, and the design system decides how it looks. Labels carry a dark outline to stay readable over lines. Selecting a caption highlights the elements it names and dims the rest; selecting a shape selects its caption.
+
+**Checks before a diagram is saved** (`checkLesson` in `src/lib/content/lessons.ts`): only the brief's facts, every fact taught, every shape inside the canvas, no colliding labels, no partly overlapping boxes (a part may sit fully inside another), every arrow starting or ending at a part, and the drawing spanning most of the canvas. A failed check goes back to the model with the list of problems, up to three attempts.
+
 ### Accounts and roles
 - Better Auth stores users and sessions in Postgres; sessions are httpOnly cookies, sign-in is rate-limited.
 - Roles: student (default), editor, publisher, admin, defined once with Better Auth’s access control and used by `can(role, action)`.
