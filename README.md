@@ -109,6 +109,56 @@ Colour comes from `tone` through CSS (`cool` pale blue, `hot` orange, `warning` 
 
 **Checks before a diagram is saved** (`checkLesson` in `src/lib/content/lessons.ts`): only the brief's facts, every fact taught, every shape inside the canvas, no colliding labels, no partly overlapping boxes (a part may sit fully inside another), every arrow starting or ending at a part, and the drawing spanning most of the canvas. A failed check goes back to the model with the list of problems, up to three attempts.
 
+### How games and sims are played
+Games and sims are generated as data too; the interaction comes from the app.
+
+**Game data.** A sort game lists groups, items and the answer. An item may carry a `scene`: the data-hall state that shows it. Shortened from a real generated lesson:
+
+```json
+{
+  "kind": "sort",
+  "prompt": "Sort each statement: does it keep hot and cold air apart, or break that separation?",
+  "groups": [
+    { "id": "keeps",  "label": "Keeps hot and cold air apart" },
+    { "id": "breaks", "label": "Breaks the separation" }
+  ],
+  "items": [
+    { "id": "s1", "text": "Containment doors and roof panels enclose the cold aisle so hot and cold air cannot mix.", "facts": ["f1"] },
+    { "id": "s2", "text": "A containment door left open lets hot exhaust leak into the cold aisle.", "facts": ["f2"], "scene": { "doorFar": "open" } }
+  ],
+  "answer": [
+    { "item": "s1", "group": "keeps" },
+    { "item": "s2", "group": "breaks" }
+  ]
+}
+```
+
+**Playing** (`src/components/lessons/GameLesson.tsx`). Items are shuffled with a seed made from their ids, so server and browser agree on the order. Each item gets a button per group; **Check answers** compares the choices with `answer` and marks each item right or wrong. `order` games use up and down buttons with an answer sequence, and `match` games pair left and right items. Hovering an item that carries a `scene` shows it on the data hall, and the same links tell the lesson which fact a problem breaks: when a student opens a door on the scene, f2 is marked "Broken now". Before saving, every item must be in exactly one existing group, every group used and every fact covered.
+
+**Sims** are the same idea on the same scene, without clicking the scene: each decision sets the picture (`"scene": { "doorFar": "open" }`), and a choice can replace it, so the right answer closes the door and the readings return to range. One correct choice per decision is checked before saving.
+
+### How the data-hall scene is drawn
+The scene is not generated. It is hand-written TypeScript built once with the Anatomy isometric kit (`src/components/figures/hall/`); lessons only send it a small state:
+
+```ts
+type HallState = {
+  doorFar: 'closed' | 'open';
+  doorNear: 'closed' | 'open';
+  reversed: number | null;      // rack A1–A4 facing the wrong way
+  missingBlank: number | null;  // rack A1–A4 with an empty rack space
+  tile: 'cold' | 'hot';         // where the movable perforated tile sits
+};
+```
+
+**Drawing.**
+1. **A 3D world in numbers** (`view.ts`): x along the rows, y across them, z up; a rack is 24 × 40 × 84 units.
+2. **Isometric projection:** a fixed camera (52° around, 38° down) maps every 3D point to a 2D point, scaled to fill the card.
+3. **Solids from simple shapes:** `slabOf` raises a floor rectangle into a box and returns SVG paths for a background-coloured fill, four side shades chosen by which way each face points to a fixed light, a lighter top and an outline. Racks, servers, doors, tiles and the cooling unit are built from these boxes and cylinders, with lines and dots on their faces.
+4. **Painter's order:** every part gets a depth value and is drawn back to front, so nearer parts cover farther ones.
+5. **Built once on the server** (`art.tsx`): every path is computed once, including every fault version (each door open and closed, each rack front and back, each panel in or missing, the tile in both aisles), each tagged such as `data-when="reversed=2"`.
+
+**Interaction** (`live.tsx`). The browser does no 3D maths. When the state changes it shows or hides the tagged versions, slides the door leaves with an eased motion, writes the sensor displays and the readout from a small illustrative temperature model (`model.ts`, readings above 27 °C turn orange), and lets CSS animate the airflow dashes. Every part is tagged with `data-part`: hovering or focusing a part names it and its fact, and clicking it (or pressing Enter) changes the state, which redraws the scene the same way.
+
 ### Accounts and roles
 - Better Auth stores users and sessions in Postgres; sessions are httpOnly cookies, sign-in is rate-limited.
 - Roles: student (default), editor, publisher, admin, defined once with Better Auth’s access control and used by `can(role, action)`.
