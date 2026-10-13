@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { signOut } from '@/app/actions/account';
-import { isStaff } from '@/lib/permissions';
 import { getSession, isMember } from '@/lib/session';
 import { Icon } from './Icon';
 
@@ -37,7 +36,6 @@ async function AccountActions({ fallback }: { fallback?: React.ReactNode }) {
   if (session && isMember(session)) {
     return (
       <>
-        {isStaff(session.user.role) && <Link className="ui-link" href="/admin">ADMIN</Link>}
         <Link className="ui-link ui-account-name" href="/account" title={`Your account (${session.user.email})`}>{session.user.name.toUpperCase()}</Link>
         <SignOutButton />
       </>
