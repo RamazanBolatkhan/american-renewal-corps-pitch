@@ -127,3 +127,10 @@ The repository is connected to Vercel. This redesign is developed on feature/int
 - New column `user.must_change_password` (migration 0003).
 - Verified in the browser against the shared database: admin creates an editor → editor logs in with the temporary password → forced to choose one → reaches `/admin`; wrong current password rejected on `/account`; admin reset → editor forced again; forgot-password fallback text; a student registers, deletes the account, and can't log in afterwards. Found and fixed a form bug where the hidden redirect field and the new-password field shared the name `next`. Test accounts were deleted.
 - The learner-facing header no longer links to the admin area, even for staff. Staff open `/admin` directly (logging in from there returns them to it); access is still enforced on the server by role.
+
+## Balanced palette (shadcn preset b6thgqxmK)
+- The pages were all dark green. The redesign follows the shadcn "sera" preset (white background, warm olive-grey neutrals, orange primary, Inter, square uppercase buttons, hairline borders) without adding Tailwind: its tokens were carried into `src/app/system.css` and an override block at the end of `src/landing/styles.css`, so no markup or behaviour changed.
+- Roles: white/cream surfaces; green for headings, selected tabs and chips, the primary start card, the footer band and technical plates; orange for actions and highlights. Filled primary buttons are #C4481B with white text (4.9:1); large orange headings use #EA5A20 (3.5:1); #FF6B35 is kept for bars, squares and fills, since it is only 2.8:1 on white.
+- Landing: white story column, green stage behind the phone, orange "Start learning" button.
+- The data-hall scene and diagrams stay on dark green plates; the scene legend joins the plate so its cream swatches stay readable.
+- Verified at 1440 and 390 wide on the landing, start, login, style, plan, the four lesson formats and the scene page; 35 unit tests pass; scene line check 0 floating ends (default and faults). Admin pages were restyled by the same tokens but not checked in the browser.

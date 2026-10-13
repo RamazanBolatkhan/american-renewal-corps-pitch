@@ -35,3 +35,6 @@
 .hall-interactive [data-part]:hover .iso-line[data-tone="lo"],.hall-interactive [data-part]:focus-visible .iso-line[data-tone="lo"]{stroke:var(--anatomy-mid)}
 .hall-interactive [data-part]:focus-visible .hall-hit{stroke:var(--anatomy-lit);stroke-width:1.2}
 .hall-note{min-height:1.6em;margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--anatomy-text)}
+/* On the light pages the figure is one green plate: the legend joins the plate, the live note uses page ink. */
+.iso.hall .iso-legend{margin-top:0;padding:12px 16px 14px;background:var(--anatomy-card);box-shadow:0 0 0 1px var(--anatomy-mid);color:var(--anatomy-muted)}
+.iso.hall .hall-note{color:var(--text-soft,#3d3d33)}

@@ -87,3 +87,34 @@
 @media(max-width:760px) and (orientation:portrait){.header-actions{gap:6px}.header-actions .outline-button{gap:8px;white-space:nowrap}.wordmark{white-space:nowrap}}
 @media(max-width:430px){.site-header .brand-name{display:none}}
 @media(max-width:360px){.header-actions .icon{display:none}}
+
+/* Balanced palette (shadcn "sera" preset): white editorial column, green stage for the phone,
+   orange for the main action. #EA5A20 is the large-type orange, #C4481B the small-text orange. */
+:root{color:var(--green);background:#fff;font-family:var(--font-inter,Inter),DM,Arial,sans-serif}
+.site-shell{background:#fff}
+.site-header{border-bottom-color:#e8e8e3}
+.brand-name,.header-note,.story-eyebrow{font-weight:600}
+.header-note{color:#666654}
+.outline-button{color:var(--green);border-color:#d3d2c4;background:#fff;font-weight:600;letter-spacing:.12em}
+.outline-button:hover{background:#fbfbf8;border-color:var(--green)}
+.start-trigger{color:#fff;background:#c4481b;border-color:#c4481b}
+.start-trigger:hover{background:#a83a14;border-color:#a83a14}
+.contact-trigger{color:var(--green);border-color:#d3d2c4}
+h1{color:var(--green)}
+.story-eyebrow{color:#666654}
+.story-description{color:#3d3d33}
+.story-feature{border-color:#e8e8e3;border-left:3px solid var(--orange);background:#fbfbf8}
+.feature-icon{background:var(--green);color:var(--paper)}
+.story-feature p{color:#666654}
+.story-note{color:#666654}
+.chapter-nav{border-top-color:#e8e8e3;--chapter-accent:#ea5a20}
+.chapter-nav button{color:#666654}
+.chapter-number{color:#a3a392}
+.chapter-nav button[aria-current=page]{color:var(--green)}
+.demo-stage{border-left:0;background:radial-gradient(ellipse at 50% 50%,#26614560 0%,transparent 65%),var(--green)}
+.site-footer{border-top-color:#e8e8e3;color:#666654}
+.footer-concept{color:#8a8a76}
+.site-footer button{color:var(--green)}
+.skip-link{background:var(--green);color:#fff}
+.accent-line{color:#ea5a20}
+.feature-corner{color:#c4481b}
