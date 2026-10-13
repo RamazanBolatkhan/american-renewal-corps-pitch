@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { Eyebrow, PageShell } from '@/components/PageShell';
 import { AuthForm } from '@/components/AuthForm';
 import { Icon } from '@/components/Icon';
+import { googleConfigured } from '@/lib/auth';
 import { safeNext } from '@/lib/next-path';
 import { getSession, isMember } from '@/lib/session';
 
@@ -30,7 +31,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
         </section>
         <section className="ui-paper" aria-labelledby="register-title">
           <h2 id="register-title" className="ui-h2">CREATE YOUR<br /><span>ACCOUNT.</span></h2>
-          <AuthForm mode="register" next={next} />
+          <AuthForm mode="register" next={next} google={googleConfigured()} />
           <p className="ui-form-foot">Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`}>Log in</Link></p>
         </section>
       </div>

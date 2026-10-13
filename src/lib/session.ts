@@ -22,10 +22,16 @@ export async function getLearningStyle(userId: string): Promise<Format | null> {
   return isFormat(profile?.learningStyle) ? profile.learningStyle : null;
 }
 
+/** Accounts created or reset by an admin must choose their own password before using the app. */
+export function requireOwnPassword(session: Awaited<ReturnType<typeof getSession>>, next: string) {
+  if (session && !session.user.isAnonymous && session.user.mustChangePassword) redirect(`/account/password?next=${encodeURIComponent(next)}`);
+}
+
 /** The real lock for the admin area. Call it in every admin page and admin action. */
 export async function requireStaff(next = '/admin') {
   const session = await getSession();
   if (!session || session.user.isAnonymous) redirect(`/login?next=${encodeURIComponent(next)}`);
+  requireOwnPassword(session, next);
   if (!isStaff(session.user.role)) redirect('/no-access');
   return session;
 }

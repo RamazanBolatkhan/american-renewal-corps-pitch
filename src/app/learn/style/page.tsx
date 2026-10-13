@@ -5,12 +5,13 @@ import { DemoBanner, LearnShell } from '@/components/LearnShell';
 import { FormatArt } from '@/components/FormatArt';
 import { Icon } from '@/components/Icon';
 import { formatInfo, formats } from '@/lib/module';
-import { getLearningStyle, getSession } from '@/lib/session';
+import { getLearningStyle, getSession, requireOwnPassword } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Choose your learning style — American Renewal Corps' };
 
 export default async function StylePage() {
   const session = await getSession();
+  requireOwnPassword(session, '/learn/style');
   const selected = session ? await getLearningStyle(session.user.id) : null;
   return (
     <LearnShell>

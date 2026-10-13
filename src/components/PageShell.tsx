@@ -38,7 +38,7 @@ async function AccountActions({ fallback }: { fallback?: React.ReactNode }) {
     return (
       <>
         {isStaff(session.user.role) && <Link className="ui-link" href="/admin">ADMIN</Link>}
-        <Link className="ui-link ui-account-name" href="/learn" title={session.user.email}>{session.user.name.toUpperCase()}</Link>
+        <Link className="ui-link ui-account-name" href="/account" title={`Your account (${session.user.email})`}>{session.user.name.toUpperCase()}</Link>
         <SignOutButton />
       </>
     );

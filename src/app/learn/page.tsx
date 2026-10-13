@@ -8,12 +8,13 @@ import { StyleSwitcher } from '@/components/StyleSwitcher';
 import { getModule, listModules } from '@/lib/content/catalog';
 import { formatInfo, formats } from '@/lib/module';
 import { buildPlan } from '@/lib/plan';
-import { getLearningStyle, getSession } from '@/lib/session';
+import { getLearningStyle, getSession, requireOwnPassword } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Your plan — American Renewal Corps' };
 
 export default async function ModulePlanPage({ searchParams }: { searchParams: Promise<{ module?: string }> }) {
   const session = await getSession();
+  requireOwnPassword(session, '/learn');
   const style = session ? await getLearningStyle(session.user.id) : null;
   if (!style) redirect('/learn/style');
   const modules = await listModules();

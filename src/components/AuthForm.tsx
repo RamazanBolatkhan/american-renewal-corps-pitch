@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { Icon } from './Icon';
+import { GoogleButton } from './account/GoogleButton';
 
 /** Email and password sign-up / log-in. A demo (anonymous) session is linked to the new account automatically. */
-export function AuthForm({ mode, next }: { mode: 'register' | 'login'; next: string }) {
+export function AuthForm({ mode, next, google = false }: { mode: 'register' | 'login'; next: string; google?: boolean }) {
   const router = useRouter();
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -33,6 +34,12 @@ export function AuthForm({ mode, next }: { mode: 'register' | 'login'; next: str
 
   return (
     <form className="ui-form" onSubmit={submit}>
+      {google && (
+        <>
+          <GoogleButton next={next} />
+          <p className="ui-or">OR WITH EMAIL</p>
+        </>
+      )}
       {isRegister && (
         <label className="ui-field" htmlFor="name">YOUR NAME
           <input id="name" name="name" autoComplete="name" maxLength={100} required placeholder="Full name" />

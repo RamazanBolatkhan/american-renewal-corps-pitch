@@ -388,3 +388,26 @@ body{margin:0;background:var(--green)}
 .scene-status-fact{display:block;color:var(--text-soft)}
 .scene-status-fact .lesson-chips{margin:0 4px;vertical-align:1px}
 @media(prefers-reduced-motion:reduce){.ui-facts li{transition:none}}
+
+/* Accounts */
+.ui-status--ok{background:#8fd3a81f;border-left-color:#1f6b3a;color:#0b3a22}
+.ui-frame .ui-status--ok{color:var(--paper);background:#8fd3a81a;border-left-color:#8fd3a8}
+.ui-button--danger{background:transparent;border:1px solid #ff8c78;color:#ffb3a5;width:100%;min-height:46px;justify-content:center;font-size:12px}
+.ui-button--danger:hover{background:#ff6b351a}
+.ui-inline-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.account-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,460px);gap:24px;margin-top:32px;align-items:start}
+.account-grid>.account-danger{grid-column:1}
+.account-details{margin:0;display:grid;gap:10px}
+.account-details div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;font-size:14px}
+.account-details dt{color:var(--text-muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:2px}
+.account-details dd{margin:0;color:var(--paper);word-break:break-word}
+.account-danger .ui-form .ui-field{color:var(--text-soft)}
+.account-danger .ui-field input{background:#00180d66;color:var(--paper);border-color:var(--frame)}
+.staff-grid{display:grid;grid-template-columns:1fr 1fr 180px;gap:12px}
+.ui-dselect{width:100%;background:#00180d66;color:var(--paper);border:1px solid var(--frame);padding:10px 12px;font:14px var(--body);height:44px}
+.ui-dselect option{color:#06402B}
+.temp-password{border:1px solid #ff6b3570;background:#ff6b350f;padding:12px 14px;display:grid;gap:8px}
+.temp-password p{font-size:13px;line-height:1.5;color:var(--text-soft)}
+.temp-password-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.temp-password code{font:15px var(--anatomy-mono,ui-monospace,monospace);color:var(--paper);background:#00180d;padding:6px 10px;letter-spacing:.06em;user-select:all}
+@media(max-width:900px){.account-grid{grid-template-columns:minmax(0,1fr)}.staff-grid{grid-template-columns:1fr}.account-details div{grid-template-columns:1fr;gap:2px}}

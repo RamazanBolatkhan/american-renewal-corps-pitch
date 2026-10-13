@@ -1,5 +1,6 @@
 import { desc } from 'drizzle-orm';
 import { setUserRole } from '@/app/actions/admin';
+import { CreateStaffForm, ResetUserPasswordButton } from '@/components/account/forms';
 import { Eyebrow, SkeletonNote } from '@/components/ui';
 import { db } from '@/db';
 import { user } from '@/db/schema';
@@ -35,14 +36,16 @@ export default async function UsersPage() {
         {isAdmin && <span className="ui-pill">{accounts.length} ACCOUNTS · {demoCount} DEMO VISITORS</span>}
       </div>
 
-      <section aria-labelledby="users-title">
+      {isAdmin && <CreateStaffForm />}
+
+      <section aria-labelledby="users-title" className={isAdmin ? 'ui-section' : undefined}>
         <h2 id="users-title" className="ui-h3" style={{ marginBottom: 16 }}>USERS</h2>
         <div className="ui-table-wrap">
           <table className="ui-table">
-            <thead><tr><th>NAME</th><th>EMAIL</th><th>ROLE</th><th>JOINED</th></tr></thead>
+            <thead><tr><th>NAME</th><th>EMAIL</th><th>ROLE</th><th>STATUS</th><th>JOINED</th><th>PASSWORD</th></tr></thead>
             <tbody>
-              {!isAdmin && <tr><td colSpan={4} className="ui-empty">Only admins can see and manage accounts.</td></tr>}
-              {isAdmin && accounts.length === 0 && <tr><td colSpan={4} className="ui-empty">No accounts yet.</td></tr>}
+              {!isAdmin && <tr><td colSpan={6} className="ui-empty">Only admins can see and manage accounts.</td></tr>}
+              {isAdmin && accounts.length === 0 && <tr><td colSpan={6} className="ui-empty">No accounts yet.</td></tr>}
               {accounts.map(u => (
                 <tr key={u.id}>
                   <td>{u.name}</td>
@@ -61,7 +64,12 @@ export default async function UsersPage() {
                       </form>
                     )}
                   </td>
+                  <td>
+                    {u.mustChangePassword ? <span className="ui-pill ui-pill--warn">MUST CHOOSE PASSWORD</span>
+                      : u.emailVerified ? <span className="ui-pill">EMAIL CONFIRMED</span> : <span className="ui-pill">EMAIL NOT CONFIRMED</span>}
+                  </td>
                   <td>{dateFormat.format(u.createdAt)}</td>
+                  <td>{u.id === session.user.id ? <span className="ui-small">Use your account page</span> : <ResetUserPasswordButton userId={u.id} name={u.name} />}</td>
                 </tr>
               ))}
             </tbody>
@@ -89,7 +97,7 @@ export default async function UsersPage() {
           </table>
         </div>
       </section>
-      <SkeletonNote>New accounts start as students. Only an admin can change roles, and admins can’t remove their own admin role.</SkeletonNote>
+      <SkeletonNote>People who register start as students. Accounts you create here get the role you pick and a temporary password, which they must replace at first log-in. Only an admin can change roles, and admins can’t remove their own admin role.</SkeletonNote>
     </>
   );
 }

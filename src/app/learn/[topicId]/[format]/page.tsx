@@ -15,7 +15,7 @@ import { Icon } from '@/components/Icon';
 import { findTopic, getLesson, getQuestions } from '@/lib/content/catalog';
 import { formatInfo, formats, isFormat } from '@/lib/module';
 import { buildPlan } from '@/lib/plan';
-import { getLearningStyle, getSession } from '@/lib/session';
+import { getLearningStyle, getSession, requireOwnPassword } from '@/lib/session';
 
 type Props = {
   params: Promise<{ topicId: string; format: string }>;
@@ -33,6 +33,7 @@ export default async function LessonPage({ params }: Props) {
   const { module, topic, index } = found;
 
   const session = await getSession();
+  requireOwnPassword(session, `/learn/${topic.id}/${format}`);
   // Visitors who haven't chosen a style can still open a lesson; the viewed format stands in.
   const style = (session && (await getLearningStyle(session.user.id))) || format;
   const planItem = buildPlan(style, module.topics.map(t => t.id)).topics.find(t => t.topic_id === topic.id)!;

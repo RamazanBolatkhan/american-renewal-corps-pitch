@@ -3,13 +3,15 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Eyebrow, PageShell } from '@/components/PageShell';
 import { AuthForm } from '@/components/AuthForm';
+import { googleConfigured } from '@/lib/auth';
 import { safeNext } from '@/lib/next-path';
 import { getSession, isMember } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Log in — American Renewal Corps' };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const next = safeNext((await searchParams).next);
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; reset?: string }> }) {
+  const params = await searchParams;
+  const next = safeNext(params.next);
   if (isMember(await getSession())) redirect(next);
 
   return (
@@ -22,7 +24,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </section>
         <section className="ui-paper" aria-labelledby="login-title">
           <h2 id="login-title" className="ui-h2">LOG IN<br /><span>TO ARC.</span></h2>
-          <AuthForm mode="login" next={next} />
+          {params.reset === '1' && <p className="ui-status ui-status--ok" role="status" style={{ marginTop: 16 }}>Password changed. Log in with your new password.</p>}
+          <AuthForm mode="login" next={next} google={googleConfigured()} />
+          <p className="ui-form-foot"><Link href="/forgot-password">Forgot password?</Link></p>
           <p className="ui-form-foot">New to ARC? <Link href={`/register?next=${encodeURIComponent(next)}`}>Create an account</Link> or <Link href="/learn/style">try the demo</Link></p>
         </section>
       </div>
