@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { healthyHall, RACKS, type HallState } from './model';
+import { healthyHall, RACKS, reversedRacks, type HallState } from './model';
 import { HallScene } from './live';
 
 /** Preview with a switch for every state the lessons can set. */
@@ -24,7 +24,7 @@ export function HallDemo({ art, initial = healthyHall }: { art: React.ReactNode;
       <div className="hall-controls" role="group" aria-label="Scene state">
         <label className="hall-control"><input type="checkbox" checked={state.doorFar === 'open'} onChange={e => set({ doorFar: e.target.checked ? 'open' : 'closed' })} /> Far door open</label>
         <label className="hall-control"><input type="checkbox" checked={state.doorNear === 'open'} onChange={e => set({ doorNear: e.target.checked ? 'open' : 'closed' })} /> Near door open</label>
-        {rackOptions(state.reversed, v => set({ reversed: v }), 'Rack facing the wrong way')}
+        {rackOptions(reversedRacks(state)[0] ?? null, v => set({ reversed: v }), 'Rack facing the wrong way')}
         {rackOptions(state.missingBlank, v => set({ missingBlank: v }), 'Missing blanking panel')}
         <label className="hall-control"><input type="checkbox" checked={state.tile === 'hot'} onChange={e => set({ tile: e.target.checked ? 'hot' : 'cold' })} /> Perforated tile in hot aisle</label>
         <button type="button" className="ui-button ui-button--outline" onClick={() => setState(healthyHall)}>RESET</button>

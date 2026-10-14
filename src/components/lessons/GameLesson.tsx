@@ -4,6 +4,7 @@ import * as React from 'react';
 import { HallScene } from '@/components/figures/hall/live';
 import { faultKinds, faultSentence, healthyHall, partKind, type FaultKind, type HallState } from '@/components/figures/hall/model';
 import type { GameContent, SceneState } from '@/lib/content/lessons';
+import { BuildGame } from './BuildGame';
 import { FactChips } from './FactChips';
 import { useFactMarks } from './factMarks';
 
@@ -31,28 +32,61 @@ const sceneOf = (scene?: SceneState): HallState => ({ ...healthyHall, ...scene }
 
 /**
  * Plays a match, order or sort game from lesson data. When items carry a scene state, the data
- * hall shows what the selected item looks like.
+ * hall shows what the selected item looks like, and a build game comes first: the student puts
+ * the hall together and sees what each wrong placement does.
  */
 export function GameLesson({ content, art, facts: briefFacts = [] }: { content: GameContent; art?: React.ReactNode; facts?: { key: string; text: string }[] }) {
-  const [active, setActive] = React.useState<Item | null>(null);
-  // The student's own changes to the scene; hovering a statement previews it instead.
-  const [own, setOwn] = React.useState<HallState>(healthyHall);
-  const [pointed, setPointed] = React.useState<string | null>(null);
-  const [checked, setChecked] = React.useState(false);
   const usesScene = Boolean(art && content.items.some(i => i.scene));
-  const facts = [...new Set(content.items.flatMap(i => i.facts))].sort();
-  const shown = active ? sceneOf(active.scene) : own;
-
+  const [tab, setTab] = React.useState<'build' | 'statements'>('build');
   // Which facts each kind of problem breaks, read from the game items that show it on the scene.
   const factsFor = (kind: FaultKind) => [...new Set(content.items.filter(i => i.scene && faultKinds(i.scene).includes(kind)).flatMap(i => i.facts))].sort();
-  const problems = usesScene ? faultKinds(shown).map(kind => ({ kind, sentence: faultSentence(kind, shown), facts: factsFor(kind) })) : [];
-  const pointedKind = pointed ? partKind(pointed) : null;
-  useFactMarks(problems.flatMap(p => p.facts), [...(pointedKind ? factsFor(pointedKind) : []), ...(active?.facts ?? [])]);
   const textOf = (key: string) => briefFacts.find(f => f.key === key)?.text;
 
   return (
     <article className="lesson lesson-game">
       <h2 className="lesson-title">{content.prompt}</h2>
+      {usesScene && (
+        <div className="game-tabs" role="tablist" aria-label="Game">
+          {([['build', '1 · Build the hall'], ['statements', `2 · ${content.kind === 'sort' ? 'Sort' : content.kind === 'order' ? 'Order' : 'Match'} the statements`]] as const).map(([id, label]) => (
+            <button key={id} type="button" role="tab" id={`game-tab-${id}`} aria-selected={tab === id} aria-controls={`game-panel-${id}`} className="game-tab" onClick={() => setTab(id)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {usesScene && tab === 'build' ? (
+        <div role="tabpanel" id="game-panel-build" aria-labelledby="game-tab-build">
+          <BuildGame art={art} factsFor={factsFor} textOf={textOf} />
+          <div className="game-actions">
+            <button type="button" className="ui-button ui-button--outline" onClick={() => setTab('statements')}>NEXT: THE STATEMENTS →</button>
+          </div>
+        </div>
+      ) : (
+        <div role={usesScene ? 'tabpanel' : undefined} id={usesScene ? 'game-panel-statements' : undefined} aria-labelledby={usesScene ? 'game-tab-statements' : undefined}>
+          <Statements content={content} art={usesScene ? art : undefined} factsFor={factsFor} textOf={textOf} />
+        </div>
+      )}
+    </article>
+  );
+}
+
+/** The lesson's own game, with the scene showing whichever statement is pointed at. */
+function Statements({ content, art, factsFor, textOf }: { content: GameContent; art?: React.ReactNode; factsFor: (kind: FaultKind) => string[]; textOf: (key: string) => string | undefined }) {
+  const [active, setActive] = React.useState<Item | null>(null);
+  // The student's own changes to the scene; hovering a statement previews it instead.
+  const [own, setOwn] = React.useState<HallState>(healthyHall);
+  const [pointed, setPointed] = React.useState<string | null>(null);
+  const [checked, setChecked] = React.useState(false);
+  const usesScene = Boolean(art);
+  const facts = [...new Set(content.items.flatMap(i => i.facts))].sort();
+  const shown = active ? sceneOf(active.scene) : own;
+
+  const problems = usesScene ? faultKinds(shown).map(kind => ({ kind, sentence: faultSentence(kind, shown), facts: factsFor(kind) })) : [];
+  const pointedKind = pointed ? partKind(pointed) : null;
+  useFactMarks(problems.flatMap(p => p.facts), [...(pointedKind ? factsFor(pointedKind) : []), ...(active?.facts ?? [])]);
+
+  return (
+    <>
       {usesScene && (
         <HallScene
           art={art}
@@ -61,7 +95,7 @@ export function GameLesson({ content, art, facts: briefFacts = [] }: { content: 
           onHover={setPointed}
           fig="Game"
           title={active ? 'What it looks like' : 'Try it: change the hall'}
-          caption="Hover a statement to see it, or click doors, racks, blanking panels and the loose tile to try things yourself. Example readings."
+          caption="Hover a statement to see it, or click doors, racks, blanking panels and the loose tile: breaking one zooms in on what goes wrong. Example readings."
         />
       )}
       {usesScene && (
@@ -93,9 +127,10 @@ export function GameLesson({ content, art, facts: briefFacts = [] }: { content: 
       {content.kind === 'match' && <MatchGame content={content} onActive={setActive} checked={checked} setChecked={setChecked} />}
       </div>
       <p className="ui-small">This game covers <FactChips facts={facts} />.</p>
-    </article>
+    </>
   );
 }
+
 
 type Shared = { onActive: (item: Item | null) => void; checked: boolean; setChecked: (v: boolean) => void };
 
