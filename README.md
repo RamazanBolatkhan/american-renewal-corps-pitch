@@ -70,7 +70,13 @@ flowchart LR
     B --> G[AI generator<br/>Read · Diagram · Game · Sim · Questions]
     G --> C{checkLesson /<br/>checkQuestion}
     C -- problems, up to 3 tries --> G
-    C -- passed --> L[(Lessons and questions)]
+    C -- passed --> J{AI judge<br/>meaning vs brief}
+    J -- passed --> L[(Lessons and questions)]
+    J -- flagged --> E[Editor review<br/>publish or reject]
+    E -- publish --> L
+    E -- reject --> G
+    E -. decisions .-> K[(Judging guide<br/>versions, HQ approves)]
+    K -.-> J
   end
   subgraph Student["Student app (/learn)"]
     S[Learning style] --> P[Module plan<br/>primary and secondary format]
@@ -93,7 +99,8 @@ flowchart LR
    - games that can be solved and sims and questions with exactly one correct answer.
 
    Failed checks are sent back to the model, up to three attempts. Every call is logged with its token counts.
-5. **Publish.** Lessons that pass are stored and appear for students. An import that is only partly generated can retry just the missing pieces.
+5. **Judge.** A second AI call checks each stored lesson and question set for meaning, following HQ's judging guide. Content it flags stays hidden until an editor decides (see [The judge and its learning loop](#the-judge-and-its-learning-loop)).
+6. **Publish.** Content that passed, or that an editor published, appears for students. An import that is only partly generated can retry just the missing pieces.
 
 ### Student side
 - **Onboarding** stores a learning style (Read, Diagram, Game or Sim) per user. Visitors get an anonymous account, so the demo works without registering; registering keeps their choices.
@@ -171,7 +178,11 @@ Games and sims are generated as data too; the interaction comes from the app.
 
 **Playing** (`src/components/lessons/GameLesson.tsx`). Items are shuffled with a seed made from their ids, so server and browser agree on the order. Each item gets a button per group; **Check answers** compares the choices with `answer` and marks each item right or wrong. `order` games use up and down buttons with an answer sequence, and `match` games pair left and right items. Hovering an item that carries a `scene` shows it on the data hall, and the same links tell the lesson which fact a problem breaks: when a student opens a door on the scene, f2 is marked "Broken now". Before saving, every item must be in exactly one existing group, every group used and every fact covered.
 
-**Sims** are the same idea on the same scene, without clicking the scene: each decision sets the picture (`"scene": { "doorFar": "open" }`), and a choice can replace it, so the right answer closes the door and the readings return to range. One correct choice per decision is checked before saving.
+**Sims** are the same idea on the same scene: each decision sets the picture (`"scene": { "doorFar": "open" }`), and a choice can replace it, so the right answer closes the door and the readings return to range. After each choice the scene zooms in on what it changed, and students can click any part to explore it. One correct choice per decision is checked before saving.
+
+**Build the hall.** When a game uses the scene, it opens with a build game (`src/components/lessons/BuildGame.tsx`) before the statements. The working hall is knocked apart into a parts bin of 11 pieces: cooling unit, four server racks, the opposite row, a perforated tile, a blanking panel, the containment roof and two doors. Students pick a piece and click its dashed outline in the hall, and it drops into place. Two placements are real decisions: which way each rack's front faces, and which aisle the tile goes in. A wrong placement zooms in on what goes wrong, and the hall only reports every inlet in range once everything is right. The build game is hand-built, not generated; the statements after it come from lesson data.
+
+**Zoom and explain.** On every scene, clicking a part zooms in on it and opens a card. A fault gets a plain sentence (for example "Rack A1 is installed facing the wrong way: it blows hot exhaust into the cold aisle"), its example inlet reading against the 18–27 °C range, and a fix button. The airflow that shows the fault thickens, speeds up and gets arrowheads.
 
 ### How the data-hall scene is drawn
 The scene is not generated. It is hand-written TypeScript built once with the Anatomy isometric kit (`src/components/figures/hall/`); lessons only send it a small state:
@@ -193,7 +204,7 @@ type HallState = {
 4. **Painter's order:** every part gets a depth value and is drawn back to front, so nearer parts cover farther ones.
 5. **Built once on the server** (`art.tsx`): every path is computed once, including every fault version (each door open and closed, each rack front and back, each panel in or missing, the tile in both aisles), each tagged such as `data-when="reversed=2"`.
 
-**Interaction** (`live.tsx`). The browser does no 3D maths. When the state changes it shows or hides the tagged versions, slides the door leaves with an eased motion, writes the sensor displays and the readout from a small illustrative temperature model (`model.ts`, readings above 27 °C turn orange), and lets CSS animate the airflow dashes. Every part is tagged with `data-part`: hovering or focusing a part names it and its fact, and clicking it (or pressing Enter) changes the state, which redraws the scene the same way.
+**Interaction** (`live.tsx`). The browser does no 3D maths. When the state changes it shows or hides the tagged versions, slides the door leaves with an eased motion, writes the sensor displays and the readout from a small illustrative temperature model (`model.ts`, readings above 27 °C turn orange), and lets CSS animate the airflow dashes. Every part is tagged with `data-part`: hovering or focusing a part names it and its fact, and clicking it (or pressing Enter) changes the state, which redraws the scene the same way. Zooming animates a transform on the whole drawing, framed on the part and the airflow tagged `data-explains` with it. For the build game, each piece carries `data-piece` and has a dashed ghost tagged `data-slot` in its painter's slot.
 
 ### Authentication
 
@@ -303,6 +314,22 @@ All prices are AI Gateway list prices per 1M tokens (October 2026). The other mo
 
 Extraction (reading the uploaded plan) is one extra call per upload. It isn't in the run log yet, so it isn't in these totals.
 
+The judge adds one call per lesson and per question set: five per topic. Measured on real lessons, each check takes about 2,200–3,200 input and 400–1,200 output tokens, under $0.001 each: about $0.003–0.0045 per topic on top of the $0.0098 above. Its tokens are stored on each `judgment` row.
+
+### The judge and its learning loop
+
+The code checks prove a lesson's **structure**: every fact covered, one correct answer, a solvable game. They can't tell whether the answer marked correct is actually correct, or whether a scene shows what its sentence says. A second Haiku call, the judge (`src/lib/content/judge.ts`), checks that **meaning** against the brief.
+
+1. **Judge.** After content passes `checkLesson` / `checkQuestion`, the judge reads the brief, the content and HQ's **judging guide**: numbered rules such as "every option marked wrong must really be wrong according to the brief" and "a scene must show what its text describes". It returns findings, each tied to a rule and marked error or warning. Any error flags the content; the verdict follows from the findings in code, not from the model's opinion. If the judge call fails, the content is held rather than shown unchecked.
+2. **Hidden until decided.** Students see content only if it passed or an editor published it. Content generated before the judge existed has no verdict and stays visible; a publisher can judge it with one button on the Reviews page.
+3. **Editors decide** at `/admin/reviews`. Each review shows the findings, a preview of what students would see and the brief. The editor publishes, or rejects, which deletes the content and regenerates it to be judged again. Disagreeing with the judge requires a note. Every decision is stored in `judge_feedback` with a copy of exactly what was judged.
+4. **HQ improves the guide** at `/admin/guide`. "Draft next version from feedback" sends the current guide and every disagreement, with the editors' notes, to the model, which rewrites only the rules the feedback supports and explains each change. HQ can also write or edit a draft by hand.
+5. **Each draft is tested before it can be approved.** The draft re-judges up to 40 recent editor decisions and gets a score, "agrees with editors on N of M", shown next to the current guide's score. Approving requires a test; the score is advisory and HQ decides. Every version is kept with its changes and score.
+
+The loop is the evaluation: editor decisions are the labelled cases, and each new guide version has to show it agrees with them before it is used. In testing, a draft written from one planted mistake sharpened the sort-answer rule and scored 2 of 2, but so did the current guide, so the score correctly showed there was nothing to gain from approving it.
+
+Editors (`edit`) publish or reject judged content; publishers and admins (`publish`) are HQ for the guide. `JUDGE_MODEL` and `GUIDE_MODEL` override the models (both default to Claude Haiku 5.5).
+
 ### Validation and tests
 
 #### Why every lesson format has a Zod schema
@@ -310,11 +337,11 @@ Extraction (reading the uploaded plan) is one extra call per upload. It isn't in
 - **AI output can't be trusted.** The model fills the schema through structured output (`Output.object`), and anything that doesn't match is rejected before it reaches the database.
 - **One definition, used everywhere.** The same schema is the TypeScript type, the shape of the stored JSON, and the props of the renderer. Hand-written lessons and generated ones go through the same gate.
 - **A discriminated union by format** (`read | diagram | game | sim`) means a renderer can't receive the wrong kind of lesson.
-- On top of the shape, `checkLesson` / `checkQuestion` check meaning: which facts are covered, word counts, the diagram layout, whether a game can be solved, and whether there's exactly one correct answer.
+- On top of the shape, `checkLesson` / `checkQuestion` check the rules code can prove: which facts are covered, word counts, the diagram layout, whether a game can be solved, and whether there's exactly one correct answer. Whether the content is *right* is the judge's job.
 
 #### Why the content checks have tests
 
-The checks decide what students see, so the checks themselves need to be proven. The 35 Vitest tests in `src/lib/content/lessons.test.ts` cover two things:
+The checks decide what students see, so the checks themselves need to be proven. 41 Vitest tests cover them. The 35 in `src/lib/content/lessons.test.ts` cover two things:
 
 - **The good passes:** the hand-written Cooling & airflow lessons and questions pass every check.
 - **The bad fails:** deliberately broken lessons are caught. Examples:
@@ -326,6 +353,8 @@ The checks decide what students see, so the checks themselves need to be proven.
 
 If someone loosens a check by mistake, a test fails before the change ships.
 
+The 6 in `src/lib/content/judging.test.ts` cover the judge's fixed parts: any error flags content and warnings don't, the guide and content reach the prompt, the drafter sees every disagreement with its note, and a guide's score counts agreement with editors correctly.
+
 ### Data model
 | Table | Holds |
 |---|---|
@@ -336,6 +365,9 @@ If someone loosens a check by mistake, a test fails before the change ships.
 | `brief`, `brief_fact` | Versioned content briefs and their key facts with source quotes |
 | `lesson`, `question` | Generated lessons (Appendix C shapes, one per brief version and format) and questions (one per fact) |
 | `generation_run` | Every AI call: kind, attempt, result, problems and tokens |
+| `judgment` | The judge's latest verdict per lesson or question set: status (passed, flagged, published, error), findings, guide version, tokens |
+| `judge_feedback` | Every editor decision on judged content, with the content and brief as judged, the judge's verdict and the editor's note |
+| `judge_guide` | Versions of HQ's judging guide: rules, status (draft, active, retired), changes and test score |
 
 ### Project layout
 ```
@@ -347,7 +379,7 @@ src/
   content/             hand-written sample lessons
   db/                  Drizzle schema and client
   lib/
-    content/           lesson schemas and checks, extraction, generation, catalog
+    content/           lesson schemas and checks, extraction, generation, the judge, catalog
     auth.ts, permissions.ts, session.ts, email.ts
   landing/             the original framework-free landing experience
 drizzle/               SQL migrations

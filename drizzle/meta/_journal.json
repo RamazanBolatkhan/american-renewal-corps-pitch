@@ -29,6 +29,13 @@
       "when": 1791849367574,
       "tag": "0003_must_change_password",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791940977525,
+      "tag": "0004_lesson_judge",
+      "breakpoints": true
     }
   ]
 }

@@ -126,3 +126,72 @@ export const generationRun = pgTable('generation_run', {
   problems: jsonb('problems').$type<string[]>().default([]).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+/* ---------- The judge: a second AI pass on meaning, editor decisions, and the guide it learns from ---------- */
+
+export const judgedKinds = ['read', 'diagram', 'game', 'sim', 'questions'] as const;
+export type JudgedKind = (typeof judgedKinds)[number];
+
+/** A judge finding: what looks wrong, where, and which guide rule or brief fact it goes against. */
+export type JudgeFinding = { where: string; problem: string; rule: string; severity: 'error' | 'warning' };
+
+/**
+ * The judge's latest verdict on one lesson (or a topic's question set). Students only see content that
+ * passed or that an editor published; flagged content waits for an editor. Content generated before the
+ * judge existed has no row and stays visible.
+ */
+export const judgment = pgTable(
+  'judgment',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    briefId: uuid('brief_id').notNull().references(() => brief.id, { onDelete: 'cascade' }),
+    topicId: text('topic_id').notNull().references(() => topic.id, { onDelete: 'cascade' }),
+    kind: text('kind').$type<JudgedKind>().notNull(),
+    status: text('status').$type<'passed' | 'flagged' | 'published' | 'error'>().notNull(),
+    findings: jsonb('findings').$type<JudgeFinding[]>().default([]).notNull(),
+    guideVersion: integer('guide_version').notNull(),
+    model: text('model').notNull(),
+    inputTokens: integer('input_tokens'),
+    outputTokens: integer('output_tokens'),
+    decidedBy: text('decided_by').references(() => user.id, { onDelete: 'set null' }),
+    decidedAt: timestamp('decided_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => [unique('judgment_brief_kind').on(table.briefId, table.kind)],
+);
+
+/**
+ * Every editor decision on a judged lesson, kept forever with a copy of what was judged. These are the
+ * cases a new judging guide is drafted from and scored against.
+ */
+export const judgeFeedback = pgTable('judge_feedback', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  briefId: uuid('brief_id').references(() => brief.id, { onDelete: 'set null' }),
+  kind: text('kind').$type<JudgedKind>().notNull(),
+  /** The brief and the content exactly as the judge saw them. */
+  briefText: text('brief_text').notNull(),
+  content: jsonb('content').notNull(),
+  judgeVerdict: text('judge_verdict').$type<'pass' | 'flag'>().notNull(),
+  findings: jsonb('findings').$type<JudgeFinding[]>().default([]).notNull(),
+  guideVersion: integer('guide_version').notNull(),
+  /** What the editor decided the content should be: publish it, or reject it for regeneration. */
+  editorVerdict: text('editor_verdict').$type<'pass' | 'flag'>().notNull(),
+  note: text('note').notNull(),
+  decidedBy: text('decided_by').references(() => user.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/** HQ's judging guide. Drafts are written by HQ or proposed by AI from editor feedback; HQ approves each version. */
+export const judgeGuide = pgTable('judge_guide', {
+  version: integer('version').primaryKey(),
+  rules: text('rules').notNull(),
+  status: text('status').$type<'draft' | 'active' | 'retired'>().notNull(),
+  /** Why this version differs from the one before it. */
+  changes: jsonb('changes').$type<{ change: string; because: string }[]>().default([]).notNull(),
+  /** How often this guide's verdicts matched editor decisions on the feedback cases, when tested. */
+  score: jsonb('score').$type<{ agree: number; total: number; misses: { feedbackId: string; editor: 'pass' | 'flag'; judge: 'pass' | 'flag' }[]; testedAt: string } | null>(),
+  createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
+  approvedBy: text('approved_by').references(() => user.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  approvedAt: timestamp('approved_at'),
+});
