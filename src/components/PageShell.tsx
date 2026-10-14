@@ -56,6 +56,7 @@ export function PageShell({ children, actions, footerNote = 'INDEPENDENT CONCEPT
       <header className="ui-header">
         <Wordmark />
         <nav className="ui-header-actions" aria-label="Account">
+          <Link className="ui-link ui-presentation-link" href="/presentation">PRESENTATION</Link>
           <AccountActions fallback={actions} />
         </nav>
       </header>
