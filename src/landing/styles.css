@@ -118,3 +118,4 @@ h1{color:var(--green)}
 .skip-link{background:var(--green);color:#f3f2e9}
 .accent-line{color:#e0521d}
 .feature-corner{color:#b8410f}
+@media(max-width:520px){.presentation-trigger{display:none}}
