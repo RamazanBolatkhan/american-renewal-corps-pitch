@@ -66,6 +66,8 @@
 .hall-ghost .hall-hit{fill:transparent}
 .hall-ghost[data-armed] .hall-ghost-line{stroke:var(--anatomy-lit);stroke-width:1.2;opacity:1;animation:hall-ghost 1.1s ease-in-out infinite}
 .hall-ghost[data-armed] .hall-hit{fill:#e0521d0a}
+/* The blanking-panel slot is tiny: when it is the target, fill it so it reads at a glance. */
+.hall-ghost[data-slot^="blank"][data-armed] .hall-hit{fill:#e0521d59}
 .hall-ghost:hover .hall-ghost-line,.hall-ghost:focus-visible .hall-ghost-line{stroke:var(--anatomy-lit);opacity:1;stroke-width:1.4}
 .hall-ghost:focus-visible .hall-hit{fill:#e0521d22}
 @keyframes hall-ghost{50%{opacity:.45}}

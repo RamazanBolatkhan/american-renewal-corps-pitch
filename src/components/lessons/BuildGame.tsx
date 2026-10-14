@@ -205,9 +205,13 @@ export function BuildGame({ art, factsFor, textOf }: { art: React.ReactNode; fac
   };
 
   const pick = (piece: Piece) => {
-    setArmed(a => (a === piece.id ? null : piece.id));
-    setExplain(null);
+    const arming = armed !== piece.id;
+    setArmed(arming ? piece.id : null);
+    // The empty rack space is a few pixels tall at full view, so the hall zooms in on it.
+    if (arming && piece.id === 'blank') zoom(['blank-a1']);
+    else setExplain(null);
     if (piece.id === 'rack' && !facing) setMessage('Choose which way the rack’s front faces, then click a dashed outline in row A.');
+    else if (piece.id === 'blank') setMessage('Click the empty space in rack A2, outlined in orange in the zoomed-in hall, to fit the panel.');
     else setMessage(`Now click a dashed outline in the hall to place the ${piece.name.toLowerCase()}.`);
   };
 
