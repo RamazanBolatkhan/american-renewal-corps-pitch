@@ -443,3 +443,30 @@ body{margin:0;background:var(--white)}
 .temp-password-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .temp-password code{font:15px var(--anatomy-mono,ui-monospace,monospace);color:var(--paper);background:var(--green);padding:6px 10px;letter-spacing:.06em;user-select:all}
 @media(max-width:900px){.account-grid{grid-template-columns:minmax(0,1fr)}.staff-grid{grid-template-columns:1fr}.account-details div{grid-template-columns:1fr;gap:2px}}
+
+/* The judge: reviews and the judging guide */
+.judge-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,340px);gap:28px;align-items:start;margin-top:20px}
+.judge-main{min-width:0}
+.ui-issues li.is-warning{border-left-color:var(--line-strong);background:var(--surface)}
+.ui-issues li.is-warning b{color:var(--text-muted)}
+.judge-preview{border-top:1px solid var(--line);margin-top:28px}
+.judge-questions{display:grid;gap:16px;padding-left:20px;font-size:14px;line-height:1.55}
+.judge-questions ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px}
+.judge-questions li.is-correct{color:var(--ok);font-weight:500}
+.judge-raw,.judge-rules{white-space:pre-wrap;font:12px/1.6 var(--anatomy-mono,ui-monospace,monospace);background:var(--surface);border:1px solid var(--line);padding:14px;overflow:auto}
+.judge-decide{display:grid;gap:12px}
+.judge-decide textarea,.judge-edit textarea,.judge-edit input{width:100%;background:var(--white);color:var(--ink);border:1px solid var(--line-strong);padding:10px 12px;font:14px/1.5 var(--body);letter-spacing:0}
+.judge-edit textarea[name=rules]{font:13px/1.6 var(--anatomy-mono,ui-monospace,monospace)}
+.judge-edit{display:grid;gap:14px;margin-top:18px}
+.judge-rejudge{background:none;border:none;padding:0;cursor:pointer;justify-self:start;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.judge-loop{list-style:none;padding:0;margin:24px 0 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--line-strong)}
+.judge-loop li{padding:14px 16px;font-size:12px;line-height:1.5;color:var(--text-muted);border-right:1px solid var(--line)}
+.judge-loop li:last-child{border-right:none}
+.judge-loop b{display:block;font:800 30px/1 var(--display);color:var(--green);margin-bottom:4px}
+.judge-versions,.judge-feedback{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:10px}
+.judge-versions li{display:flex;gap:10px;align-items:center;font-size:13px}
+.judge-versions a{font-weight:600;color:var(--green);min-width:28px}
+.judge-versions a[aria-current]{color:var(--orange-ink);text-decoration:underline}
+.judge-feedback li{display:grid;gap:4px;font-size:13px;line-height:1.5;color:var(--text-soft);border-left:3px solid var(--orange);padding-left:10px}
+.judge-feedback b{font-size:10px;letter-spacing:.1em;color:var(--orange-ink);font-weight:600}
+@media(max-width:900px){.judge-layout{grid-template-columns:minmax(0,1fr)}.judge-loop{grid-template-columns:1fr 1fr}.judge-loop li:nth-child(2){border-right:none}.judge-loop li:nth-child(-n+2){border-bottom:1px solid var(--line)}}

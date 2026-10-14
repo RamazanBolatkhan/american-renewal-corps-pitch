@@ -8,6 +8,8 @@ const links: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin', label: 'OVERVIEW', icon: 'grid' },
   { href: '/admin/imports', label: 'PLAN IMPORTS', icon: 'upload' },
   { href: '/admin/content', label: 'CONTENT', icon: 'layers' },
+  { href: '/admin/reviews', label: 'REVIEWS', icon: 'check' },
+  { href: '/admin/guide', label: 'JUDGING GUIDE', icon: 'lock' },
   { href: '/admin/users', label: 'USERS & ROLES', icon: 'user' },
 ];
 
@@ -17,7 +19,7 @@ export function AdminNav() {
     <nav className="ui-sidenav" aria-label="Admin">
       <span className="ui-label">ADMIN</span>
       {links.map(link => (
-        <Link key={link.href} href={link.href} aria-current={pathname === link.href ? 'page' : undefined}>
+        <Link key={link.href} href={link.href} aria-current={pathname === link.href || (link.href !== '/admin' && pathname.startsWith(`${link.href}/`)) ? 'page' : undefined}>
           <Icon name={link.icon} /> {link.label}
         </Link>
       ))}

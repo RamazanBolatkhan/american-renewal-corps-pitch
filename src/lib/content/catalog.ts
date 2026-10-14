@@ -1,7 +1,7 @@
 import 'server-only';
 import { asc, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
-import { brief, briefFact, curriculumModule, generatedLesson, generatedQuestion, topic } from '@/db/schema';
+import { brief, briefFact, curriculumModule, generatedLesson, generatedQuestion, topic, type JudgedKind } from '@/db/schema';
 import { coolingModule, type Format } from '@/lib/module';
 import { Lesson, Question } from './lessons';
 import { getSampleLesson, getSampleQuestions } from './sample';
@@ -93,8 +93,15 @@ export async function findTopic(topicId: string) {
   return null;
 }
 
+/** Generated content is shown when the judge passed it, an editor published it, or it predates the judge. */
+async function cleared(briefId: string, kind: JudgedKind) {
+  const verdict = await db.query.judgment.findFirst({ where: (j, { and }) => and(eq(j.briefId, briefId), eq(j.kind, kind)) });
+  return !verdict || verdict.status === 'passed' || verdict.status === 'published';
+}
+
 export async function getLesson(t: CatalogTopic, format: Format) {
   if (!t.briefId) return getSampleLesson(t.id, format);
+  if (!(await cleared(t.briefId, format))) return null;
   const row = await db.query.generatedLesson.findFirst({ where: (l, { and }) => and(eq(l.briefId, t.briefId!), eq(l.format, format)) });
   if (!row) return null;
   const parsed = Lesson.safeParse({ id: `${t.id}.${format}`, topicId: t.id, format, facts: row.facts, content: row.content });
@@ -103,6 +110,7 @@ export async function getLesson(t: CatalogTopic, format: Format) {
 
 export async function getQuestions(t: CatalogTopic) {
   if (!t.briefId) return getSampleQuestions(t.id);
+  if (!(await cleared(t.briefId, 'questions'))) return [];
   const rows = await db.select().from(generatedQuestion).where(eq(generatedQuestion.briefId, t.briefId)).orderBy(asc(generatedQuestion.position));
   return rows.map(r => Question.safeParse(r.content)).flatMap(r => (r.success ? [r.data] : []));
 }
