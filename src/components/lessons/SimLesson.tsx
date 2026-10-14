@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { HallScene } from '@/components/figures/hall/live';
-import { healthyHall, type HallState } from '@/components/figures/hall/model';
+import { HallScene, type Focus } from '@/components/figures/hall/live';
+import { faultKinds, faultParts, healthyHall, type HallState } from '@/components/figures/hall/model';
 import type { SceneState, SimContent } from '@/lib/content/lessons';
 import { FactChips } from './FactChips';
 import { useFactMarks } from './factMarks';
@@ -21,6 +21,17 @@ export function SimLesson({ content, art }: { content: SimContent; art?: React.R
   const decision = content.decisions[Math.min(step, content.decisions.length - 1)];
   const choice = picked === null ? null : decision.choices[picked];
   const state = finished ? sceneOf() : sceneOf(decision.scene, choice?.scene);
+  // After a choice, zoom in on the part it is about: still broken, newly broken, or just fixed.
+  let explain: Focus | null = null;
+  if (!finished && choice) {
+    const before = sceneOf(decision.scene);
+    const kinds = [...new Set([...faultKinds(decision.scene ?? {}), ...faultKinds(choice.scene ?? {})])];
+    const parts = [...new Set(kinds.flatMap(kind => {
+      const now = faultParts(kind, state);
+      return now.length ? now : faultParts(kind, before);
+    }))];
+    if (parts.length) explain = { parts, seq: step * 100 + (picked ?? 0) };
+  }
   // Highlight the current decision's facts; a wrong choice marks them as broken.
   useFactMarks(!finished && choice && !choice.correct ? decision.facts : [], finished ? [] : decision.facts);
 
@@ -36,7 +47,16 @@ export function SimLesson({ content, art }: { content: SimContent; art?: React.R
     <article className="lesson lesson-sim">
       <h2 className="lesson-title">{content.title}</h2>
       <p className="sim-scenario">{content.scenario}</p>
-      {art && <HallScene art={art} state={state} fig="Sim" title={finished ? 'Walk-down complete' : `Decision ${step + 1} of ${content.decisions.length}`} hint="Example readings" />}
+      {art && (
+        <HallScene
+          art={art}
+          state={state}
+          explain={explain}
+          fig="Sim"
+          title={finished ? 'Walk-down complete' : `Decision ${step + 1} of ${content.decisions.length}`}
+          caption="Click any part to zoom in and see what it does. After each call, the scene zooms in on what it changed. Example readings."
+        />
+      )}
 
       <ol className="sim-progress" aria-label="Progress">
         {content.decisions.map((d, i) => (

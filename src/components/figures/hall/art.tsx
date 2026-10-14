@@ -13,12 +13,26 @@ type Item = { key: number; node: React.ReactNode };
  * Static art for the data hall, built once on the server. Every state variant is drawn in its
  * painter's slot and tagged with `data-when`; the live component shows or hides variants and
  * slides the door leaves.
+ *
+ * For the build game, every buildable piece carries `data-piece` (shown once all listed pieces are
+ * placed) and has a dashed ghost in its painter's slot tagged `data-slot`. Fault airflow carries
+ * `data-explains` with the part it explains, so a zoom on that part can emphasise it.
  */
 
 const depth = (p: Point3) => k.depthOf(p, P);
 const path3 = (points: Point3[], closed = false) => k.pathOf(points.map(at), closed);
 const facePoly = (x0: number, x1: number, y: number, z0: number, z1: number) => path3([[x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1]], true);
 const plan = (x: number, y: number, w: number, d: number, r = 0.4): k.Plan => ({ x, y, w, d, r });
+
+/** A dashed ghost of a piece that has not been placed yet: the build game's drop target. */
+function Ghost({ slot, paths }: { slot: string; paths: k.SolidPaths }) {
+  return (
+    <g data-slot={slot} className="hall-ghost">
+      <path className="hall-hit" d={paths.fill} />
+      <path className="hall-ghost-line" d={paths.outline} />
+    </g>
+  );
+}
 
 /* ------------------------------------------------------------------ floor ------------------------------------------------------------------ */
 
@@ -81,7 +95,7 @@ function CoolingUnit() {
   const plinth = k.slabOf(k.insetPlan(CRAH, -1.5), 0, 4, P, 2, 0.4);
   const panel = { y0: CRAH.y + 6, y1: CRAH.y + 18, z0: 62, z1: 74 };
   return (
-    <g key="crah" data-part="cooling-unit">
+    <g key="crah" data-part="cooling-unit" data-piece="cooling-unit">
       <path className="iso-halo" d={k.haloOf(CRAH, 0, CRAH_H, P)} />
       <Solid paths={plinth} tone="lo" />
       <Solid paths={body} tone="mid" inner={<Line d={k.sideSeam(CRAH, 52, P, 2)} tone="faint" />} />
@@ -136,6 +150,7 @@ function RackA({ index }: { index: number }) {
             <g data-when={`missingBlank=${index}`} data-fault="gap">
               <path className="hall-void" d={facePoly(x + 2, x + RACK_W - 2, y + 0.05, s.z, s.z + s.h)} />
               <Line d={facePoly(x + 2, x + RACK_W - 2, y + 0.05, s.z, s.z + s.h)} tone="lit" />
+              <Ghost slot={`blank-a${index}`} paths={k.slabOf(plan(x + 2, y, RACK_W - 4, 0.8, 0.2), s.z, s.h, P, 2)} />
             </g>
           </g>
         ) : (
@@ -170,7 +185,7 @@ function RackA({ index }: { index: number }) {
     </g>
   );
   return (
-    <g data-part={`rack-a${index}`}>
+    <g data-part={`rack-a${index}`} data-piece={`rack-a${index}`}>
       <Solid paths={body} tone="mid" />
       <Line d={k.planOutline(top, RACK_H, P, 2)} tone="faint" />
       <Dots points={k.dotGrid(top.x + 2, top.y + 3, 5, 10, 3, RACK_H, P)} size={0.35} tone="lo" />
@@ -189,7 +204,7 @@ function RackB({ index }: { index: number }) {
   const yBack = ROW_B.y + RACK_D;
   const rearSlots = serverSlots().filter(s => s.z + s.h <= h - 1);
   return (
-    <g data-part={`rack-b${index}`}>
+    <g data-part={`rack-b${index}`} data-piece="rack-row-b">
       <Solid paths={body} tone="mid" />
       {/* Rear door perforations on the back (+y) face */}
       <Line d={facePoly(x + 1.4, x + RACK_W - 1.4, yBack, 2, h - 2)} tone="lo" />
@@ -263,7 +278,7 @@ function coolFlows() {
     const gap = (TILE - 4.8 - 3.2) / 7;
     const hole: Point3 = [x - TILE / 2 + 4 + gap * 4, y - TILE / 2 + 4 + gap * 4, 0.05];
     const pts = curve(hole, [hole[0], hole[1] - 2, end[2] + 16], end, 16);
-    return { key: depth([x, y, 0]), d: path3(pts), id: `cool-${i}` };
+    return { key: depth([x, y, 0]), d: path3(pts), id: `cool-${i}`, rack: Math.floor(x / RACK_W) };
   });
 }
 
@@ -281,6 +296,35 @@ function hotReturns() {
   });
 }
 
+/** The whole doorway at one end of the aisle, for the build game's ghost. */
+function doorway(end: 'far' | 'near') {
+  return k.slabOf(plan(DOOR_X[end] - 0.5, AISLE.y0 - 3, 3, AISLE.y1 - AISLE.y0 + 6, 0.3), 0, HEADER_Z + 6, P, 2, 0.3);
+}
+
+/** Exhaust leaking through an open door: from the top vents of the end rack, round the row end, into the end rack's front. */
+function doorLeak(end: 'far' | 'near') {
+  const i = end === 'far' ? 0 : RACKS - 1;
+  const out = end === 'far' ? -1 : 1;
+  const vent: Point3 = [ROW_X + i * RACK_W + 3 + 2 + 3 * 2, ROW_A.y + 3 + 3, RACK_H];
+  const door = end === 'far' ? DOOR_X.far - 8 : DOOR_X.near + DOOR_T + 8;
+  const slot = serverSlots().filter(sl => !sl.blank).reduce((best, sl) => (Math.abs(sl.z + sl.h / 2 - 44) < Math.abs(best.z + best.h / 2 - 44) ? sl : best));
+  const inlet: Point3 = [ROW_X + i * RACK_W + 4, AISLE.y0 + 1.6, slot.z + slot.h / 2];
+  const turn: Point3 = [door, -2, 56];
+  const first = curve(vent, [vent[0] + out * 6, ROW_A.y - 6, RACK_H + 18], turn, 12);
+  const second = curve(turn, [inlet[0] + out * 2, 8, 50], inlet, 12);
+  return path3([...first, ...second.slice(1)]);
+}
+
+/** Cold air from a tile in the hot aisle rises into the rear fans of the cut row next to it. */
+function tileWaste() {
+  const gap = (TILE - 4.8 - 3.2) / 7;
+  const hole: Point3 = [TILE_HOT.x + 4 + gap * 3, TILE_HOT.y + 4 + gap * 3, 0.05];
+  const slot = serverSlots().find(sl => sl.z + sl.h <= CUT_Z - 1)!;
+  const r = Math.min(1.8, slot.h / 2 - 0.5);
+  const rim: Point3 = [ROW_X + 2 * RACK_W + 12 + r, ROW_B.y + RACK_D, slot.z + slot.h / 2];
+  return path3(curve(hole, [hole[0], hole[1] - 2, 22], rim, 14));
+}
+
 /* ------------------------------------------------------------------ assembly ------------------------------------------------------------------ */
 
 export function HallArt() {
@@ -288,12 +332,22 @@ export function HallArt() {
   const add = (key: number, node: React.ReactNode) => items.push({ key, node });
 
   add(depth([CRAH.x + CRAH.w / 2, CRAH.y + CRAH.d / 2, 0]), <CoolingUnit key="crah" />);
-  for (const r of hotReturns()) add(r.key, <Line key={r.id} d={r.d} tone="red" flow />);
-  for (let i = 0; i < RACKS; i++) add(depth([ROW_X + i * RACK_W + RACK_W / 2, ROW_A.y + RACK_D / 2, 0]), <RackA key={`a${i}`} index={i} />);
+  add(depth([CRAH.x + CRAH.w / 2, CRAH.y + CRAH.d / 2, 0]) - 0.01, <Ghost key="crah-slot" slot="cooling-unit" paths={k.slabOf(CRAH, 0, CRAH_H, P, 2, 0.8)} />);
+  hotReturns().forEach((r, i) => add(r.key, <g key={r.id} data-piece={`cooling-unit rack-a${i}`}><Line d={r.d} tone="red" flow /></g>));
+  for (let i = 0; i < RACKS; i++) {
+    const key = depth([ROW_X + i * RACK_W + RACK_W / 2, ROW_A.y + RACK_D / 2, 0]);
+    add(key - 0.01, <Ghost key={`a${i}-slot`} slot={`rack-a${i}`} paths={k.slabOf(plan(ROW_X + i * RACK_W, ROW_A.y, RACK_W, RACK_D, 0.4), 0, RACK_H, P, 2, 0.5)} />);
+    add(key, <RackA key={`a${i}`} index={i} />);
+  }
   // The last cool flow rises from the movable tile, so it disappears when the tile is moved to the hot aisle.
-  coolFlows().forEach((f, i, all) => add(f.key + 20, (
-    <g key={f.id} data-when={i === all.length - 1 ? 'tile=cold' : undefined}><Line d={f.d} tone="blue" flow /></g>
-  )));
+  coolFlows().forEach((f, i, all) => {
+    const last = i === all.length - 1;
+    add(f.key + 20, (
+      <g key={f.id} data-when={last ? 'tile=cold' : undefined} data-piece={`cooling-unit rack-a${f.rack}${last ? ' tile-movable' : ''}`} data-explains={last ? 'tile-movable' : undefined}>
+        <Line d={f.d} tone="blue" flow />
+      </g>
+    ));
+  });
 
   // Reversed rack exhaust: blown from its rear across the cold aisle onto the cut row opposite.
   for (let i = 0; i < RACKS; i++) {
@@ -303,13 +357,13 @@ export function HallArt() {
     const fanRim: Point3 = [ROW_X + i * RACK_W + 12 + fanR, AISLE.y0 + 1.25, fanSlot.z + fanSlot.h / 2];
     const pts = curve(fanRim, [x, 0, 46], [x, AISLE.y1 + 2, i === 0 ? 40 : CUT_Z]);
     add(depth([x, 0, 30]) + 30, (
-      <g key={`leak-${i}`} data-when={`reversed=${i}`}><Line d={path3(pts)} tone="red" flow /></g>
+      <g key={`leak-${i}`} data-when={`reversed=${i}`} data-piece={`rack-a${i}`} data-explains={`rack-a${i}`}><Line d={path3(pts)} tone="red" flow /></g>
     ));
     // Missing blanking panel: exhaust curls back through the gap toward the floor in front of the rack.
     const gz = serverSlots().find(s => s.blank)!.z + 2;
     const back = curve([x, AISLE.y0 + 0.2, gz], [x + 4, AISLE.y0 + 12, gz + 2], [x + 5, 0, 0]);
     add(depth([x, AISLE.y0 + 6, gz]) + 30, (
-      <g key={`gap-${i}`} data-when={`missingBlank=${i}`}><Line d={path3(back)} tone="red" flow /></g>
+      <g key={`gap-${i}`} data-when={`missingBlank=${i}`} data-piece={`rack-a${i}`} data-explains={`blank-a${i}`}><Line d={path3(back)} tone="red" flow /></g>
     ));
   }
 
@@ -317,16 +371,21 @@ export function HallArt() {
   // of both rows are always nearer the viewer: it is drawn before either of them, open or closed.
   const far = DoorFrame({ end: 'far' });
   const beforeEnds = Math.min(depth([ROW_X + RACK_W / 2, ROW_A.y + RACK_D / 2, 0]), depth([ROW_X + RACK_W / 2, ROW_B.y + RACK_D / 2, 0])) - 1;
-  add(beforeEnds - 0.4, <Solid key="far-post-a" paths={far.posts[0]} tone="mid" />);
-  add(beforeEnds - 0.3, <Leaf key="far-leaf-a" end="far" side={-1} />);
-  add(beforeEnds - 0.2, <Leaf key="far-leaf-b" end="far" side={1} />);
-  add(beforeEnds - 0.1, <Solid key="far-post-b" paths={far.posts[1]} tone="mid" />);
+  add(beforeEnds - 0.5, <Ghost key="far-slot" slot="door-far" paths={doorway('far')} />);
+  add(beforeEnds - 0.4, <g key="far-post-a" data-piece="door-far"><Solid paths={far.posts[0]} tone="mid" /></g>);
+  add(beforeEnds - 0.3, <g key="far-leaf-a" data-piece="door-far"><Leaf end="far" side={-1} /></g>);
+  add(beforeEnds - 0.2, <g key="far-leaf-b" data-piece="door-far"><Leaf end="far" side={1} /></g>);
+  add(beforeEnds - 0.1, <g key="far-post-b" data-piece="door-far"><Solid paths={far.posts[1]} tone="mid" /></g>);
 
+  add(depth([ROW_X + RACK_W / 2, ROW_B.y + RACK_D / 2, 0]) + 29.9, (
+    <Ghost key="b-slot" slot="rack-row-b" paths={k.slabOf(plan(ROW_X, ROW_B.y, ROW_LEN, RACK_D, 0.4), 0, CUT_Z, P, 2, 0.5)} />
+  ));
   for (let i = 0; i < RACKS; i++) add(depth([ROW_X + i * RACK_W + RACK_W / 2, ROW_B.y + RACK_D / 2, 0]) + 30, <RackB key={`b${i}`} index={i} />);
 
   const roof = k.slabOf(plan(DOOR_X.far - 0.5, AISLE.y0, RACK_W + 3.5, AISLE.y1 - AISLE.y0, 0.3), HEADER_Z + 6, 1.6, P, 2, 0.3);
+  add(depth([10, 0, HEADER_Z]) + 199.9, <Ghost key="roof-slot" slot="roof" paths={roof} />);
   add(depth([10, 0, HEADER_Z]) + 200, (
-    <g key="roof" data-part="roof">
+    <g key="roof" data-part="roof" data-piece="roof">
       <Solid paths={far.header} tone="mid" />
       <Solid paths={roof} tone="lo" />
       <Line d={k.planOutline(k.insetPlan(plan(DOOR_X.far - 0.5, AISLE.y0, RACK_W + 3.5, AISLE.y1 - AISLE.y0), 2.4), HEADER_Z + 7.6, P, 2)} tone="faint" />
@@ -335,22 +394,47 @@ export function HallArt() {
 
   // Near door at the open end of the aisle.
   const near = DoorFrame({ end: 'near' });
-  add(depth([near.x, AISLE.y0, 0]) + 240, <Solid key="near-post-a" paths={near.posts[0]} tone="mid" />);
-  add(depth([DOOR_X.near, -12, 40]) + 240, <Leaf key="near-leaf-a" end="near" side={-1} />);
-  add(depth([DOOR_X.near, 12, 40]) + 240, <Leaf key="near-leaf-b" end="near" side={1} />);
-  add(depth([near.x, AISLE.y1, 0]) + 240, <Solid key="near-post-b" paths={near.posts[1]} tone="mid" />);
-  add(depth([near.x, 0, HEADER_Z]) + 250, <Solid key="near-header" paths={near.header} tone="mid" />);
+  add(depth([near.x, AISLE.y0, 0]) + 239.9, <Ghost key="near-slot" slot="door-near" paths={doorway('near')} />);
+  add(depth([near.x, AISLE.y0, 0]) + 240, <g key="near-post-a" data-piece="door-near"><Solid paths={near.posts[0]} tone="mid" /></g>);
+  add(depth([DOOR_X.near, -12, 40]) + 240, <g key="near-leaf-a" data-piece="door-near"><Leaf end="near" side={-1} /></g>);
+  add(depth([DOOR_X.near, 12, 40]) + 240, <g key="near-leaf-b" data-piece="door-near"><Leaf end="near" side={1} /></g>);
+  add(depth([near.x, AISLE.y1, 0]) + 240, <g key="near-post-b" data-piece="door-near"><Solid paths={near.posts[1]} tone="mid" /></g>);
+  add(depth([near.x, 0, HEADER_Z]) + 250, <g key="near-header" data-piece="door-near"><Solid paths={near.header} tone="mid" /></g>);
+
+  // Open doors: hot exhaust from the hot aisle curls round the end of the rows and into the cold aisle.
+  for (const end of ['far', 'near'] as const) {
+    const flow = doorLeak(end);
+    add(depth([DOOR_X[end], 0, 40]) + 260, (
+      <g key={`door-leak-${end}`} data-when={end === 'far' ? 'doorFar=open' : 'doorNear=open'} data-piece={`door-${end}`} data-explains={`door-${end}`}>
+        <Line d={flow} tone="red" flow />
+      </g>
+    ));
+  }
+  // A perforated tile in the hot aisle: its cold air rises straight into the exhaust behind row B.
+  add(depth([TILE_HOT.x + TILE / 2, TILE_HOT.y + TILE / 2, 0]) + 40, (
+    <g key="tile-waste" data-when="tile=hot" data-piece="tile-movable" data-explains="tile-movable"><Line d={tileWaste()} tone="blue" flow /></g>
+  ));
 
   items.sort((a, b) => a.key - b.key);
 
   return (
     <>
+      <defs>
+        {/* Arrowheads for the airflow a zoomed-in explanation is about. */}
+        {(['red', 'blue'] as const).map(tone => (
+          <marker key={tone} id={`hall-arrow-${tone}`} className="hall-arrow" data-tone={tone} viewBox="0 0 6 6" refX="3" refY="3" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse">
+            <path d="M0 0.4 6 3 0 5.6Z" />
+          </marker>
+        ))}
+      </defs>
       <Floor />
       <PerfTile tile={plan(ROW_X, AISLE.y0, TILE, TILE)} />
       <PerfTile tile={plan(ROW_X + 2 * TILE, AISLE.y0, TILE, TILE)} />
       <PerfTile tile={plan(ROW_X + TILE, 0, TILE, TILE)} />
-      <PerfTile tile={TILE_HOME} when="tile=cold" part="tile-movable" />
-      <g data-when="tile=hot" data-fault="tile" data-part="tile-movable">
+      <Ghost slot="tile-cold" paths={k.slabOf(k.insetPlan(TILE_HOME, 0.6), 0, 0.05, P, 2)} />
+      <Ghost slot="tile-hot" paths={k.slabOf(k.insetPlan(TILE_HOT, 0.6), 0, 0.05, P, 2)} />
+      <g data-piece="tile-movable"><PerfTile tile={TILE_HOME} when="tile=cold" part="tile-movable" /></g>
+      <g data-when="tile=hot" data-fault="tile" data-part="tile-movable" data-piece="tile-movable">
         <PerfTile tile={TILE_HOT} part="tile-movable" />
         <Line d={k.planOutline(k.insetPlan(TILE_HOT, 0.6), 0.05, P, 2)} tone="lit" />
       </g>

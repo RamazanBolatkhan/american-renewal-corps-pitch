@@ -383,6 +383,31 @@ body{margin:0;background:var(--white)}
 @media(max-width:600px){.game-item{grid-template-columns:1fr}.game-groups{justify-content:flex-start}.game-match{grid-template-columns:1fr}.game-item--order{grid-template-columns:28px minmax(0,1fr)}.game-item--order .game-groups{grid-column:2}}
 @media(prefers-reduced-motion:reduce){.game-item{transition:none}}
 
+/* Game tabs and the build game */
+.game-tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--line-strong)}
+.game-tab{font:600 11px/1 var(--body);letter-spacing:.14em;text-transform:uppercase;padding:12px 16px;margin-bottom:-1px;border:1px solid transparent;border-bottom:none;background:none;color:var(--text-muted);cursor:pointer}
+.game-tab:hover{color:var(--green)}
+.game-tab[aria-selected=true]{background:var(--white);border-color:var(--line-strong);color:var(--green);box-shadow:inset 0 3px 0 var(--orange)}
+.build{display:grid;gap:16px}
+.build-start{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center}
+.build-message{margin:0;min-height:1.6em;font-size:14px;line-height:1.6;color:var(--strong);font-weight:500}
+.build-bin{border:1px dashed var(--line-strong);background:var(--surface);padding:12px 14px 14px;display:grid;gap:10px}
+.build-bin-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;align-items:start}
+.bin-card{transform:rotate(var(--tilt,0deg));transition:transform .2s;display:grid;gap:6px}
+.bin-card:hover,.bin-card.is-on{transform:rotate(0) translateY(-2px)}
+.bin-pick{width:100%;height:100%;display:grid;gap:3px;align-content:start;justify-items:start;text-align:left;padding:8px 10px 10px;background:var(--white);border:1px solid var(--line-strong);box-shadow:4px 4px 0 var(--green-tint);cursor:pointer;font:inherit;color:inherit}
+.bin-pick:hover:not(:disabled){border-color:var(--green)}
+.bin-card.is-on .bin-pick{border-color:var(--orange-ink);box-shadow:4px 4px 0 var(--orange-tint),inset 0 3px 0 var(--orange)}
+.bin-pick:disabled{cursor:not-allowed;opacity:.55}
+.bin-card.is-empty{transform:none}
+.bin-card.is-empty .bin-pick{opacity:.4;box-shadow:none;border-style:dashed}
+.bin-icon{width:63px;height:48px;margin:0}
+.bin-name{font:800 14px/1.1 var(--display);color:var(--green);text-transform:uppercase}
+.bin-name em{font-style:normal;color:var(--orange-display)}
+.bin-note{font-size:11px;line-height:1.4;color:var(--text-muted)}
+.bin-facing{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+@media(prefers-reduced-motion:reduce){.bin-card{transition:none}}
+
 /* Facts linked to the scene */
 .ui-facts li{transition:background .25s,box-shadow .25s;padding:4px 6px;margin:-4px -6px}
 .ui-facts li[data-fact-state="related"]{background:var(--green-tint);box-shadow:inset 2px 0 0 var(--green)}
